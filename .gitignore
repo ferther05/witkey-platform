@@ -1,0 +1,43 @@
+# ---- Java / Maven ----
+target/
+*.class
+*.jar
+!mvnw
+!.mvn/wrapper/maven-wrapper.jar
+*.war
+
+# ---- 运行产物 ----
+uploads/
+logs/
+*.log
+run-now.log
+run.log
+run.err.log
+
+# ---- Node / 前端 ----
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ---- IDE ----
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+.DS_Store
+
+# ---- 环境与密钥 ----
+.env
+.env.local
+application-local.yml
+application-prod.yml
+
+# ---- 临时文件 ----
+.tmp/
+*.tmp
+*.bak

@@ -1,0 +1,72 @@
+/* 全局样式与设计变量（与 docs/02 的视觉规范保持一致） */
+:root {
+  --wk-primary: #ff6b00;
+  --wk-primary-light: #fff3eb;
+  --wk-success: #2fa84f;
+  --wk-warning: #f5a623;
+  --wk-danger: #e5484d;
+  --wk-text-1: #1f2329;
+  --wk-text-2: #4e5969;
+  --wk-text-3: #86909c;
+  --wk-bg: #f7f8fa;
+  --wk-border: #e5e6eb;
+  --wk-radius: 12px;
+  --wk-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  color: var(--wk-text-1);
+  background: var(--wk-bg);
+  font-size: 14px;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.wk-container {
+  width: 1200px;
+  max-width: calc(100% - 48px);
+  margin: 0 auto;
+}
+
+.wk-card {
+  background: #fff;
+  border-radius: var(--wk-radius);
+  box-shadow: var(--wk-shadow);
+  padding: 24px;
+}
+
+.wk-page-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.wk-page-desc {
+  color: var(--wk-text-3);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+
+.wk-muted {
+  color: var(--wk-text-3);
+}
+
+/* Element Plus 主色对齐品牌色 */
+:root {
+  --el-color-primary: #ff6b00;
+}

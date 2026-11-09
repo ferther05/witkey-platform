@@ -1,0 +1,40 @@
+server:
+  port: ${SERVER_PORT:8082}
+
+spring:
+  application:
+    name: witkey-server
+  datasource:
+    # 数据库连接支持环境变量覆盖，默认值方便本地直接跑
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DB:witkey_platform}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:114514}
+  jpa:
+    hibernate:
+      # 开发期用 update 自动建表；冻结表结构后改为 validate 并只执行 sql/witkey_platform.sql
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect
+  jackson:
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+
+witkey:
+  storage:
+    # 本地磁盘存储；换成 MinIO/OSS 只需新增一个 FileStorage 实现
+    root: ${STORAGE_ROOT:./uploads}
+  jwt:
+    # 生产环境请务必替换，至少 32 字节
+    secret: ${JWT_SECRET:witkey-platform-dev-secret-key-please-change-in-production-2026}
+    expire-hours: 168
+
+logging:
+  level:
+    com.psc.witkey: info
