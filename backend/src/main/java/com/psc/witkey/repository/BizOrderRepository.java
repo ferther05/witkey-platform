@@ -20,6 +20,8 @@ public interface BizOrderRepository extends JpaRepository<BizOrder, Long> {
 
     long countByWitkeyIdAndStatus(Long witkeyId, String status);
 
+    long countByEmployerIdAndStatus(Long employerId, String status);
+
     long countByStatus(String status);
 
     @Query("select coalesce(sum(o.amount), 0) from BizOrder o where o.status = 'DONE'")

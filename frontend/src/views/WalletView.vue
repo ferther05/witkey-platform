@@ -32,14 +32,32 @@
           {{ recon.consistent ? '平账' : '异常' }}
         </el-tag>
       </div>
-      <div class="recon-grid">
-        <div><span class="wk-muted">累计充值</span><b>¥ {{ formatMoney(recon.totalRecharge) }}</b></div>
-        <div><span class="wk-muted">累计结算到账</span><b>¥ {{ formatMoney(recon.totalIncome) }}</b></div>
-        <div><span class="wk-muted">累计提现</span><b>¥ {{ formatMoney(recon.totalWithdraw) }}</b></div>
-        <div><span class="wk-muted">流水推算余额</span><b>¥ {{ formatMoney(recon.computedBalance) }}</b></div>
-        <div><span class="wk-muted">流水推算冻结</span><b>¥ {{ formatMoney(recon.computedFrozen) }}</b></div>
-        <div><span class="wk-muted">账户实际</span><b>¥ {{ formatMoney(info.balance) }} / {{ formatMoney(info.frozen) }}</b></div>
+
+      <div class="recon-lines">
+        <div class="recon-line">
+          <span class="k">可用余额</span>
+          <b>¥ {{ formatMoney(recon.balance) }}</b>
+          <span class="op">=</span>
+          <span class="k">流水推算</span>
+          <b>¥ {{ formatMoney(recon.computedBalance) }}</b>
+          <el-icon v-if="recon.consistent" class="ok"><CircleCheck /></el-icon>
+        </div>
+        <div class="recon-line">
+          <span class="k">托管冻结</span>
+          <b>¥ {{ formatMoney(recon.frozen) }}</b>
+          <span class="op">=</span>
+          <span class="k">流水推算</span>
+          <b>¥ {{ formatMoney(recon.computedFrozen) }}</b>
+          <el-icon v-if="recon.consistent" class="ok"><CircleCheck /></el-icon>
+        </div>
       </div>
+
+      <div class="recon-stats">
+        <span>累计充值 <b>¥{{ formatMoney(recon.totalRecharge) }}</b></span>
+        <span>结算到账 <b>¥{{ formatMoney(recon.totalIncome) }}</b></span>
+        <span>累计提现 <b>¥{{ formatMoney(recon.totalWithdraw) }}</b></span>
+      </div>
+
       <p class="wk-muted small tip">
         对账逻辑：用所有流水反推余额与冻结，与账户字段比对；不一致说明有绕过流水改余额的漏洞。
       </p>
@@ -248,20 +266,59 @@ onMounted(async () => {
 
 .recon-head h3 { margin: 0; font-size: 15px; }
 
-.recon-grid {
+.recon-lines {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 10px;
 }
 
-.recon-grid div {
+.recon-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
   background: #fafbfc;
   border-radius: 10px;
-  padding: 12px 14px;
+  font-size: 14px;
+}
+
+.recon-line .k {
+  color: var(--wk-text-3);
+  font-size: 12.5px;
+}
+
+.recon-line b {
+  font-family: Consolas, monospace;
+  font-size: 14.5px;
+}
+
+.recon-line .op {
+  color: var(--wk-text-3);
+  padding: 0 2px;
+}
+
+.recon-line .ok {
+  color: var(--wk-success);
+  margin-left: auto;
+}
+
+.recon-stats {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 13px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.recon-stats span {
+  font-size: 12px;
+  color: var(--wk-text-3);
+  background: #f7f8fa;
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+
+.recon-stats b {
+  color: var(--wk-text-1);
+  font-weight: 600;
 }
 
 .tip { margin: 14px 0 0; }

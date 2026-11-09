@@ -33,6 +33,15 @@ public class OrderController {
         return Result.ok(orderService.myOrders(SecurityUtils.userId(), role));
     }
 
+    /** 待办数量：雇主待验收、威客待交付（首页用） */
+    @GetMapping("/todo")
+    public Result<java.util.Map<String, Long>> todo() {
+        Long userId = SecurityUtils.userId();
+        return Result.ok(java.util.Map.of(
+                "toAccept", orderService.countToAccept(userId),
+                "toDeliver", orderService.countToDeliver(userId)));
+    }
+
     @GetMapping("/{id}")
     public Result<OrderVO> detail(@PathVariable Long id) {
         return Result.ok(orderService.detail(SecurityUtils.userId(), id));

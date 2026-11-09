@@ -303,6 +303,8 @@ onMounted(async () => {
   font-size: 15px;
   margin: 12px 0 8px;
   line-height: 1.5;
+  /* 固定两行高度，卡片内赏金/元信息才能对齐 */
+  min-height: 45px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

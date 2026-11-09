@@ -70,9 +70,12 @@ const data = reactive({
   trend: [], categoryStats: []
 })
 
+let chartTrend = null
+let chartPie = null
+
 function renderTrend() {
-  const chart = echarts.init(trendRef.value)
-  chart.setOption({
+  chartTrend = echarts.init(trendRef.value)
+  chartTrend.setOption({
     tooltip: { trigger: 'axis' },
     legend: { data: ['订单数', '成交额'], bottom: 0 },
     grid: { left: 40, right: 40, top: 20, bottom: 50 },
@@ -104,8 +107,8 @@ function renderTrend() {
 }
 
 function renderPie() {
-  const chart = echarts.init(pieRef.value)
-  chart.setOption({
+  chartPie = echarts.init(pieRef.value)
+  chartPie.setOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} 个 ({d}%)' },
     legend: { bottom: 0 },
     color: ['#ff6b00', '#2fa84f', '#3b82f6', '#f5a623', '#9b59b6'],
@@ -123,6 +126,15 @@ function renderPie() {
   })
 }
 
+function observeResize() {
+  const observer = new ResizeObserver(() => {
+    chartTrend?.resize()
+    chartPie?.resize()
+  })
+  if (trendRef.value) observer.observe(trendRef.value.parentElement)
+  if (pieRef.value) observer.observe(pieRef.value.parentElement)
+}
+
 onMounted(async () => {
   loading.value = true
   try {
@@ -130,6 +142,7 @@ onMounted(async () => {
     await nextTick()
     renderTrend()
     renderPie()
+    observeResize()
   } finally {
     loading.value = false
   }

@@ -46,6 +46,19 @@ public class StatsService {
         this.financeService = financeService;
     }
 
+    /** 首页展示用的公开概览 */
+    public com.psc.witkey.dto.PublicOverviewVO overview() {
+        var finance = financeService.summary();
+        return new com.psc.witkey.dto.PublicOverviewVO(
+                taskRepository.count(),
+                taskRepository.countByStatus("RECRUITING"),
+                userRepository.count(),
+                orderRepository.count(),
+                finance.doneOrderCount(),
+                finance.totalGmv(),
+                finance.totalCommission());
+    }
+
     public DashboardVO dashboard() {
         var finance = financeService.summary();
         List<BizOrder> orders = orderRepository.findAll();

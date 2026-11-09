@@ -160,6 +160,16 @@ public class OrderService {
         return toVOList(orders);
     }
 
+    /** 待我验收的订单数（雇主视角） */
+    public long countToAccept(Long userId) {
+        return orderRepository.countByEmployerIdAndStatus(userId, OrderStatus.TO_ACCEPT.name());
+    }
+
+    /** 待我交付的订单数（威客视角） */
+    public long countToDeliver(Long userId) {
+        return orderRepository.countByWitkeyIdAndStatus(userId, OrderStatus.TO_DELIVER.name());
+    }
+
     public OrderVO detail(Long userId, Long orderId) {
         BizOrder order = requireOrder(orderId);
         if (!order.getEmployerId().equals(userId) && !order.getWitkeyId().equals(userId)) {
