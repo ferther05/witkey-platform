@@ -1,3 +1,4 @@
+// AuditRequest —— 请求体：审核结果（是否通过 + 意见）
 package com.psc.witkey.dto;
 
 import jakarta.validation.constraints.Size;

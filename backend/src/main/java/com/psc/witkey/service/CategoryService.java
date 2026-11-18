@@ -1,3 +1,4 @@
+// CategoryService —— 业务：任务分类读写
 package com.psc.witkey.service;
 
 import com.psc.witkey.common.BusinessException;
@@ -25,21 +26,31 @@ public class CategoryService {
         this.taskRepository = taskRepository;
     }
 
+    // 查询启用中的分类（按排序号）
     public List<CategoryVO> listEnabled() {
         return categoryRepository.findByStatusOrderBySortAsc(1).stream().map(CategoryVO::from).toList();
     }
 
+    // 查询全部
     public List<CategoryVO> listAll() {
         return categoryRepository.findAllByOrderBySortAsc().stream().map(CategoryVO::from).toList();
     }
 
+    // 新建
     @Transactional
+    // 新建
     public CategoryVO create(String name, BigDecimal commissionRate, Integer sort) {
         if (name == null || name.isBlank()) {
             throw new BusinessException("分类名称不能为空");
         }
         if (categoryRepository.existsByName(name.trim())) {
             throw new BusinessException("分类已存在");
+        }
+        // 佣金比例必须落在 0-50 之间（与修改接口保持一致）
+        if (commissionRate != null
+                && (commissionRate.compareTo(BigDecimal.ZERO) < 0
+                || commissionRate.compareTo(new BigDecimal("50")) > 0)) {
+            throw new BusinessException("佣金比例需在 0-50 之间");
         }
         TaskCategory category = new TaskCategory();
         category.setName(name.trim());
@@ -48,7 +59,9 @@ public class CategoryService {
         return CategoryVO.from(categoryRepository.save(category));
     }
 
+    // 更新任务：重新回到待审核并调整托管金额
     @Transactional
+    // 更新数据
     public CategoryVO update(Long id, String name, BigDecimal commissionRate, Integer sort, Integer status) {
         TaskCategory category = categoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "分类不存在"));
@@ -70,7 +83,9 @@ public class CategoryService {
         return CategoryVO.from(categoryRepository.save(category));
     }
 
+    // 删除
     @Transactional
+    // 删除
     public void delete(Long id) {
         TaskCategory category = categoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "分类不存在"));

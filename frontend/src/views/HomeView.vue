@@ -1,3 +1,4 @@
+<!-- views/HomeView.vue：页面：首页（问候、待办、平台概览、快捷入口） -->
 <template>
   <div class="home">
     <section class="hero wk-card">
@@ -13,11 +14,18 @@
           <el-tag size="small" :type="authTag.type">{{ authTag.text }}</el-tag>
         </p>
         <div class="hero-actions">
-          <el-button v-if="store.profile?.identityType === 'EMPLOYER'" type="primary" @click="router.push('/tasks/publish')">
-            发布任务
-          </el-button>
-          <el-button v-else type="primary" @click="router.push('/tasks')">去任务大厅接单</el-button>
-          <el-button @click="router.push('/wallet')">我的钱包</el-button>
+          <!-- 管理员：只提供后台入口，不显示接单/钱包等个人操作 -->
+          <template v-if="isAdmin">
+            <el-button type="primary" @click="router.push('/admin/dashboard')">进入后台管理</el-button>
+            <el-button @click="router.push('/tasks')">查看任务大厅</el-button>
+          </template>
+          <template v-else>
+            <el-button v-if="store.profile?.identityType === 'EMPLOYER'" type="primary" @click="router.push('/tasks/publish')">
+              发布任务
+            </el-button>
+            <el-button v-else type="primary" @click="router.push('/tasks')">去任务大厅接单</el-button>
+            <el-button @click="router.push('/wallet')">我的钱包</el-button>
+          </template>
         </div>
       </div>
       <div class="hero-right">
@@ -42,7 +50,7 @@
         <el-icon :size="28" color="#ff6b00"><User /></el-icon>
         <div>
           <h3>个人中心</h3>
-          <p class="wk-muted">资料、实名认证、密码与身份切换</p>
+          <p class="wk-muted">{{ isAdmin ? '账号资料与密码修改' : '资料、实名认证、密码与身份切换' }}</p>
         </div>
       </div>
       <div class="entry wk-card" @click="router.push('/notice')">
@@ -124,6 +132,8 @@ import { getOverview, getTodoCounts } from '@/api/home'
 import { formatMoney } from '@/utils/format'
 
 const router = useRouter()
+// 是否管理员
+const isAdmin = computed(() => store.profile?.role === 'ADMIN')
 const store = useUserStore()
 const unread = ref(0)
 

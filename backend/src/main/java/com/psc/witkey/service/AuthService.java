@@ -1,3 +1,4 @@
+// AuthService —— 业务：注册与登录，签发 JWT
 package com.psc.witkey.service;
 
 import com.psc.witkey.common.BusinessException;
@@ -33,7 +34,9 @@ public class AuthService {
         this.noticeService = noticeService;
     }
 
+    // 注册账号：校验用户名唯一、密码入库、发送欢迎消息
     @Transactional
+    // 注册账号
     public UserVO register(RegisterRequest req) {
         if (userRepository.existsByUsername(req.username())) {
             throw new BusinessException("用户名已被占用");
@@ -56,6 +59,7 @@ public class AuthService {
         return UserVO.from(saved);
     }
 
+    // 登录：校验密码、签发 JWT
     public LoginResponse login(LoginRequest req) {
         SysUser user = userRepository.findByUsername(req.username())
                 .orElseThrow(() -> new BusinessException(400, "用户名或密码错误"));

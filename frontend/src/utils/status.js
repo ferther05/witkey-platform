@@ -1,3 +1,4 @@
+// utils/status.js：工具：任务/订单/投标状态的中文与颜色映射
 /** 投标 / 订单状态文案（与后端枚举一一对应） */
 const BID_META = {
   PENDING: { text: '待选', type: 'warning' },
@@ -13,7 +14,9 @@ const ORDER_META = {
   REFUNDED: { text: '已退款', type: 'info' }
 }
 
+// 功能：bidStatus
 export const bidStatus = (s) => BID_META[s] || { text: s, type: 'info' }
+// 功能：orderStatus
 export const orderStatus = (s) => ORDER_META[s] || { text: s, type: 'info' }
 
 const FLOW_META = {
@@ -25,4 +28,5 @@ const FLOW_META = {
   COMMISSION: { text: '佣金', type: 'danger' },
   WITHDRAW: { text: '提现', type: 'info' }
 }
+// 功能：flowStatus
 export const flowStatus = (s) => FLOW_META[s] || { text: s, type: 'info' }

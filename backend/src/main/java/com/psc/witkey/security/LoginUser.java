@@ -1,3 +1,4 @@
+// LoginUser —— 登录用户模型：实现 UserDetails，供 Spring
 package com.psc.witkey.security;
 
 /**

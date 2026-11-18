@@ -1,3 +1,4 @@
+<!-- views/OrdersView.vue：页面：我的订单（买到的 / 卖出的） -->
 <template>
   <div class="orders">
     <h2 class="wk-page-title">我的订单</h2>
@@ -47,6 +48,7 @@ const role = ref('employer')
 const list = ref([])
 const loading = ref(false)
 
+// 加载页面数据
 async function load() {
   loading.value = true
   try {

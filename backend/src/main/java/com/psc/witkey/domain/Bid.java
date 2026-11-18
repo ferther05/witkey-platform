@@ -1,3 +1,4 @@
+// Bid —— 实体：投标记录（对应表 bid）
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;
@@ -24,6 +25,9 @@ import java.time.LocalDateTime;
 @Table(name = "bid",
         uniqueConstraints = @UniqueConstraint(name = "uk_bid_task_witkey", columnNames = {"task_id", "witkey_id"}),
         indexes = @Index(name = "idx_bid_task_status", columnList = "task_id,status"))
+/**
+ * 实体：投标记录（对应表 bid）。
+ */
 @Getter
 @Setter
 @NoArgsConstructor

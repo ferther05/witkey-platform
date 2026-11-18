@@ -1,3 +1,4 @@
+// SecurityConfig —— 安全配置：放行公开接口、开启方法级权限、注册 JWT 过滤器
 package com.psc.witkey.security;
 
 import org.springframework.context.annotation.Bean;
@@ -32,12 +33,16 @@ public class SecurityConfig {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 
+    // 密码加密器（BCrypt）
     @Bean
+    // 执行 passwordEncoder
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // 继续执行过滤器链
     @Bean
+    // 执行 filterChain
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -60,6 +65,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // 把响应写成 JSON
     private void writeJson(jakarta.servlet.http.HttpServletResponse res, int code, String message)
             throws java.io.IOException {
         res.setStatus(code);
@@ -68,7 +74,9 @@ public class SecurityConfig {
         res.getWriter().write("{\"code\":" + code + ",\"message\":\"" + message + "\",\"data\":null}");
     }
 
+    // 配置跨域规则
     @Bean
+    // 执行 corsConfigurationSource
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of("*"));

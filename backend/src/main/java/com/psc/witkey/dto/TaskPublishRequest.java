@@ -1,3 +1,4 @@
+// TaskPublishRequest —— 请求体：发布/编辑任务（标题、分类、描述、赏金、截止、附件）
 package com.psc.witkey.dto;
 
 import jakarta.validation.constraints.DecimalMin;
@@ -8,7 +9,11 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
+/**
+ * 请求体：发布/编辑任务（标题、分类、描述、赏金、截止、附件）。
+ */
 public record TaskPublishRequest(
         @NotBlank(message = "任务标题不能为空")
         @Size(max = 100, message = "标题最长 100 个字符")
@@ -27,6 +32,9 @@ public record TaskPublishRequest(
 
         @NotNull(message = "请选择截止时间")
         @Future(message = "截止时间必须晚于当前时间")
-        LocalDateTime deadline
+        LocalDateTime deadline,
+
+        /* 附件 fileId 列表，可为空 */
+        List<Long> fileIds
 ) {
 }

@@ -1,3 +1,4 @@
+// PageResult —— 分页结果包装：列表 + 总数 + 页码 + 每页条数
 package com.psc.witkey.common;
 
 import java.util.List;

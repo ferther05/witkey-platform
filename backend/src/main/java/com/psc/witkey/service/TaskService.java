@@ -1,3 +1,4 @@
+// TaskService —— 业务：任务发布/编辑/撤回/审核/查询/收藏与状态机
 package com.psc.witkey.service;
 
 import com.psc.witkey.common.BusinessException;
@@ -48,24 +49,29 @@ public class TaskService {
     private final SysUserRepository userRepository;
     private final WalletService walletService;
     private final NoticeService noticeService;
+    private final com.psc.witkey.repository.FileResourceRepository fileRepository;
 
     public TaskService(TaskRepository taskRepository,
                        TaskCategoryRepository categoryRepository,
                        TaskFavoriteRepository favoriteRepository,
                        SysUserRepository userRepository,
                        WalletService walletService,
-                       NoticeService noticeService) {
+                       NoticeService noticeService,
+                       com.psc.witkey.repository.FileResourceRepository fileRepository) {
         this.taskRepository = taskRepository;
         this.categoryRepository = categoryRepository;
         this.favoriteRepository = favoriteRepository;
         this.userRepository = userRepository;
         this.walletService = walletService;
         this.noticeService = noticeService;
+        this.fileRepository = fileRepository;
     }
 
     // ------------------------------------------------------------------ 写
 
+    // 发布任务：校验参数、冻结赏金、置为待审核
     @Transactional
+    // 发布任务并冻结赏金
     public TaskVO publish(Long userId, TaskPublishRequest req) {
         TaskCategory category = requireCategory(req.categoryId());
 
@@ -76,6 +82,7 @@ public class TaskService {
         task.setDescription(req.description().trim());
         task.setBudget(req.budget());
         task.setDeadline(req.deadline());
+        task.setFileIds(joinFileIds(req.fileIds()));
         task.setStatus(TaskStatus.PENDING_AUDIT.name());
         Task saved = taskRepository.save(task);
 
@@ -86,7 +93,9 @@ public class TaskService {
         return toVO(saved, false);
     }
 
+    // 更新任务：重新回到待审核并调整托管金额
     @Transactional
+    // 更新数据
     public TaskVO update(Long userId, Long taskId, TaskPublishRequest req) {
         Task task = requireOwnedTask(userId, taskId);
         if (!TaskStatus.valueOf(task.getStatus()).canEdit()) {
@@ -118,12 +127,17 @@ public class TaskService {
         task.setBudget(newBudget);
         task.setDeadline(req.deadline());
         // 改过的任务必须重新审核，避免先通过再改内容绕过审核
+        if (req.fileIds() != null) {
+            task.setFileIds(joinFileIds(req.fileIds()));
+        }
         task.setStatus(TaskStatus.PENDING_AUDIT.name());
         task.setAuditRemark(null);
         return toVO(taskRepository.save(task), false);
     }
 
+    // 撤回：任务撤回 / 提现，按类语义执行
     @Transactional
+    // 撤回 / 提现
     public void withdraw(Long userId, Long taskId) {
         Task task = requireOwnedTask(userId, taskId);
         TaskStatus status = TaskStatus.valueOf(task.getStatus());
@@ -144,7 +158,9 @@ public class TaskService {
                 "撤回任务《" + task.getTitle() + "》退还赏金");
     }
 
+    // 审核任务：通过进入招募中，驳回写入意见并通知雇主
     @Transactional
+    // 审核任务
     public TaskVO audit(Long taskId, boolean pass, String remark) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(404, "任务不存在"));
@@ -169,7 +185,9 @@ public class TaskService {
         return toVO(taskRepository.save(task), false);
     }
 
+    // 切换收藏状态
     @Transactional
+    // 切换收藏
     public boolean toggleFavorite(Long userId, Long taskId) {
         taskRepository.findById(taskId).orElseThrow(() -> new BusinessException(404, "任务不存在"));
         var existing = favoriteRepository.findByUserIdAndTaskId(userId, taskId);
@@ -186,6 +204,7 @@ public class TaskService {
 
     // ------------------------------------------------------------------ 读
 
+    // 任务大厅查询：关键词/分类/预算区间/排序 + 分页
     public PageResult<TaskVO> hall(String keyword, Long categoryId, BigDecimal minBudget,
                                    BigDecimal maxBudget, String sort, Long viewerId, int page, int size) {
         int p = Math.max(page, 1);
@@ -220,7 +239,9 @@ public class TaskService {
         return new PageResult<>(toVOList(result.getContent(), viewerId), result.getTotalElements(), p, s);
     }
 
+    // 查询详情
     @Transactional
+    // 查询详情
     public TaskVO detail(Long taskId, Long viewerId, boolean viewerIsAdmin) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(404, "任务不存在"));
@@ -243,6 +264,7 @@ public class TaskService {
         return toVO(task, favorite);
     }
 
+    // 我的任务列表（可按状态过滤）
     public PageResult<TaskVO> myTasks(Long userId, String status, int page, int size) {
         int p = Math.max(page, 1);
         int s = Math.min(Math.max(size, 1), 50);
@@ -254,6 +276,7 @@ public class TaskService {
         return new PageResult<>(toVOList(result.getContent(), userId), result.getTotalElements(), p, s);
     }
 
+    // 我的收藏列表
     public PageResult<TaskVO> myFavorites(Long userId, int page, int size) {
         int p = Math.max(page, 1);
         int s = Math.min(Math.max(size, 1), 50);
@@ -267,17 +290,38 @@ public class TaskService {
         return new PageResult<>(toVOList(ordered, userId), favorites.getTotalElements(), p, s);
     }
 
+    // 分页查询待审核任务（最新提交在前）
     public PageResult<TaskVO> pendingAudit(int page, int size) {
         int p = Math.max(page, 1);
         int s = Math.min(Math.max(size, 1), 50);
         Page<Task> result = taskRepository.findAll(
                 (root, query, cb) -> cb.equal(root.get("status"), TaskStatus.PENDING_AUDIT.name()),
-                PageRequest.of(p - 1, s, Sort.by(Sort.Direction.ASC, "createdAt")));
+                // 最新提交排最前：管理员进页面就能看到刚发布的，不用翻到最后一页
+                PageRequest.of(p - 1, s, Sort.by(Sort.Direction.DESC, "createdAt")));
         return new PageResult<>(toVOList(result.getContent(), null), result.getTotalElements(), p, s);
+    }
+
+    // 把附件 id 列表拼成逗号分隔字符串
+    private static String joinFileIds(java.util.List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return null;
+        }
+        return ids.stream().filter(java.util.Objects::nonNull).distinct()
+                .map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+    }
+
+    // 解析逗号分隔的附件 id
+    private static java.util.List<Long> parseFileIds(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return java.util.List.of();
+        }
+        return java.util.Arrays.stream(raw.split(","))
+                .map(String::trim).filter(v -> !v.isEmpty()).map(Long::valueOf).toList();
     }
 
     // ------------------------------------------------------------------ 内部
 
+    // 取分类，不存在/已停用则报错
     private TaskCategory requireCategory(Long categoryId) {
         TaskCategory category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BusinessException("任务分类不存在"));
@@ -287,6 +331,7 @@ public class TaskService {
         return category;
     }
 
+    // 取任务并校验属于当前用户
     private Task requireOwnedTask(Long userId, Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(404, "任务不存在"));
@@ -296,10 +341,12 @@ public class TaskService {
         return task;
     }
 
+    // 实体转响应对象
     private TaskVO toVO(Task task, boolean favorite) {
         return toVOList(List.of(task), null, favorite).get(0);
     }
 
+    // 批量实体转响应对象
     private List<TaskVO> toVOList(List<Task> tasks, Long viewerId) {
         return toVOList(tasks, viewerId, false);
     }
@@ -344,10 +391,16 @@ public class TaskService {
                 task.getBidCount(),
                 task.getViewCount(),
                 forceFavorite || favoriteIds.contains(task.getId()),
-                task.getCreatedAt()
+                task.getCreatedAt(),
+                parseFileIds(task.getFileIds()),
+                parseFileIds(task.getFileIds()).isEmpty()
+                        ? java.util.List.of()
+                        : fileRepository.findAllById(parseFileIds(task.getFileIds())).stream()
+                                .map(com.psc.witkey.dto.FileVO::of).toList()
         )).toList();
     }
 
+    // 取用户展示名（优先昵称）
     private String displayName(SysUser user) {
         return user.getNickname() == null || user.getNickname().isBlank()
                 ? user.getUsername() : user.getNickname();

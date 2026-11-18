@@ -1,7 +1,10 @@
+<!-- views/ProfileView.vue：页面：个人中心（资料、实名认证、改密、身份切换） -->
 <template>
   <div class="profile">
     <h2 class="wk-page-title">个人中心</h2>
-    <p class="wk-page-desc">资料、实名认证、身份切换与账号安全都集中在这里</p>
+    <p class="wk-page-desc">
+      {{ isAdmin ? '管理员账号资料与密码修改' : '资料、实名认证、身份切换与账号安全都集中在这里' }}
+    </p>
 
     <div class="layout">
       <!-- 左：名片 -->
@@ -36,15 +39,17 @@
           </div>
         </div>
 
-        <el-divider />
+        <template v-if="!isAdmin">
+          <el-divider />
 
-        <div class="switch">
+          <div class="switch">
           <div class="wk-muted switch-label">当前主身份</div>
           <el-radio-group :model-value="store.profile?.identityType" :disabled="switchLoading" @change="onSwitch">
             <el-radio-button value="EMPLOYER">雇主</el-radio-button>
             <el-radio-button value="WITKEY">威客</el-radio-button>
           </el-radio-group>
-        </div>
+          </div>
+        </template>
       </aside>
 
       <!-- 右：设置 -->
@@ -79,7 +84,7 @@
           </el-tab-pane>
 
           <!-- 实名认证 -->
-          <el-tab-pane label="实名认证" name="identity">
+          <el-tab-pane v-if="!isAdmin" label="实名认证" name="identity">
             <el-alert
               v-if="store.profile?.authStatus === 'PENDING'"
               type="warning"
@@ -94,6 +99,14 @@
               :closable="false"
               show-icon
               title="已完成实名认证"
+              class="mb"
+            />
+            <el-alert
+              v-else-if="store.profile?.authStatus === 'REJECTED'"
+              type="error"
+              :closable="false"
+              show-icon
+              :title="'认证未通过：' + (store.profile?.authRemark || '资料不完整') + '（可修改后重新提交）'"
               class="mb"
             />
             <el-form :model="identityForm" label-width="90px" class="form">
@@ -143,6 +156,8 @@ import { changePassword } from '@/api/user'
 import { uploadFile } from '@/api/file'
 
 const store = useUserStore()
+// 管理员没有雇主/威客身份，也不需要实名认证
+const isAdmin = computed(() => store.profile?.role === 'ADMIN')
 const tab = ref('basic')
 
 const saving = ref(false)
@@ -152,11 +167,13 @@ const switchLoading = ref(false)
 const avatarInput = ref()
 const uploadingAvatar = ref(false)
 
+// 选择头像文件
 function pickAvatar() {
   if (uploadingAvatar.value) return
   avatarInput.value?.click()
 }
 
+// 事件处理：AvatarChange
 async function onAvatarChange(e) {
   const file = e.target.files?.[0]
   e.target.value = ''
@@ -215,6 +232,7 @@ const pwdRules = {
   ]
 }
 
+// 回填编辑表单
 function fillForms() {
   const p = store.profile
   if (!p) return
@@ -228,6 +246,7 @@ function fillForms() {
 
 watch(() => store.profile, fillForms, { immediate: true })
 
+// 事件处理：SaveProfile
 async function onSaveProfile() {
   saving.value = true
   try {
@@ -238,6 +257,7 @@ async function onSaveProfile() {
   }
 }
 
+// 事件处理：Apply
 async function onApply() {
   if (!identityForm.realName.trim()) return ElMessage.warning('请填写真实姓名')
   if (!/^1[3-9]\d{9}$/.test(identityForm.mobile)) return ElMessage.warning('请填写正确的手机号')
@@ -250,6 +270,7 @@ async function onApply() {
   }
 }
 
+// 事件处理：ChangePassword
 async function onChangePassword() {
   await pwdRef.value?.validate().catch(() => Promise.reject())
   changing.value = true
@@ -263,6 +284,7 @@ async function onChangePassword() {
   }
 }
 
+// 事件处理：Switch
 async function onSwitch(value) {
   try {
     await ElMessageBox.confirm(

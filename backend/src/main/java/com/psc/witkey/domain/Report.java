@@ -1,3 +1,4 @@
+// Report —— 实体：举报工单（对应表 report）
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;

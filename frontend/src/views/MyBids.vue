@@ -1,3 +1,4 @@
+<!-- views/MyBids.vue：页面：我的投标（改价、撤标、去交付） -->
 <template>
   <div class="my-bids">
     <h2 class="wk-page-title">我的投标</h2>

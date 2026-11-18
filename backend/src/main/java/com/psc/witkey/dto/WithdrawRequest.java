@@ -1,3 +1,4 @@
+// WithdrawRequest —— 请求体：模拟提现金额
 package com.psc.witkey.dto;
 
 import jakarta.validation.constraints.DecimalMin;

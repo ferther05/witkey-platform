@@ -1,3 +1,4 @@
+<!-- layouts/AdminLayout.vue：布局：后台（可折叠侧边栏 + 标题栏 + 内容区） -->
 <template>
   <div class="admin">
     <aside class="sidebar" :class="{ collapsed }">
@@ -14,11 +15,18 @@
         </el-menu-item>
         <el-menu-item index="/admin/tasks">
           <el-icon><DocumentChecked /></el-icon>
-          <template #title>任务审核</template>
+          <template #title>
+            任务审核
+            <span v-if="pendingCount" class="pending-num">{{ pendingCount }}</span>
+          </template>
         </el-menu-item>
         <el-menu-item index="/admin/reports">
           <el-icon><Warning /></el-icon>
           <template #title>举报处理</template>
+        </el-menu-item>
+        <el-menu-item index="/admin/log">
+          <el-icon><Tickets /></el-icon>
+          <template #title>操作日志</template>
         </el-menu-item>
         <el-menu-item index="/admin/users">
           <el-icon><User /></el-icon>
@@ -71,24 +79,37 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { adminPendingTasks } from '@/api/admin'
 
 const route = useRoute()
 const router = useRouter()
 const store = useUserStore()
 
+const pendingCount = ref(0)
+let pendingTimer = null
+
+// 侧边栏「任务审核」角标：让管理员一眼看到有没有新任务要审
+async function refreshPending() {
+  const data = await adminPendingTasks({ page: 1, size: 1 }).catch(() => null)
+  if (data) pendingCount.value = data.total || 0
+}
+
 const KEY = 'witkey_admin_sidebar_collapsed'
 const collapsed = ref(localStorage.getItem(KEY) === '1')
 
+// 折叠 / 展开侧边栏
 function toggleCollapse() {
   collapsed.value = !collapsed.value
   localStorage.setItem(KEY, collapsed.value ? '1' : '0')
 }
 
 onMounted(async () => {
+  refreshPending()
+  pendingTimer = setInterval(refreshPending, 60000)
   if (!store.profile) {
     await store.fetchProfile().catch(() => {})
   }
@@ -96,6 +117,10 @@ onMounted(async () => {
     ElMessage.error('没有后台访问权限')
     router.replace('/home')
   }
+})
+
+onBeforeUnmount(() => {
+  if (pendingTimer) clearInterval(pendingTimer)
 })
 </script>
 
@@ -147,6 +172,7 @@ onMounted(async () => {
   border-radius: 8px;
   background: var(--wk-primary);
   color: #fff;
+  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.28);
   display: grid;
   place-items: center;
   font-weight: 700;
@@ -172,7 +198,7 @@ onMounted(async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--wk-bg);
+  background: transparent;
 }
 
 .bar {
@@ -197,6 +223,20 @@ onMounted(async () => {
 
 .crumb {
   font-weight: 600;
+}
+
+.menu-badge {
+  display: inline-flex;
+}
+
+.badge-num {
+  margin-left: 6px;
+  font-size: 11px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--wk-danger);
+  color: #fff;
+  line-height: 16px;
 }
 
 .user {

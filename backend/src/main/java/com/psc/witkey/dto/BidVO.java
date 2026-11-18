@@ -1,3 +1,4 @@
+// BidVO —— 响应体：投标详情
 package com.psc.witkey.dto;
 
 import java.math.BigDecimal;

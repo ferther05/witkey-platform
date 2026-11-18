@@ -1,3 +1,4 @@
+<!-- views/MyTasks.vue：页面：我的任务（按状态筛选、撤回、编辑） -->
 <template>
   <div class="my-tasks">
     <div class="head">
@@ -99,6 +100,7 @@ const page = ref(1)
 const size = ref(8)
 const loading = ref(false)
 
+// 加载页面数据
 async function load() {
   loading.value = true
   try {
@@ -112,16 +114,19 @@ async function load() {
   }
 }
 
+// 事件处理：TabChange
 function onTabChange() {
   page.value = 1
   load()
 }
 
+// 事件处理：Page
 function onPage(p) {
   page.value = p
   load()
 }
 
+// 撤回 / 提现
 async function onWithdraw(task) {
   try {
     await ElMessageBox.confirm(

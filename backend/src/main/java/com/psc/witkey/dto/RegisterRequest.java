@@ -1,9 +1,13 @@
+// RegisterRequest —— 请求体：注册（用户名、密码、昵称、身份）
 package com.psc.witkey.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * 请求体：注册（用户名、密码、昵称、身份）。
+ */
 public record RegisterRequest(
         @NotBlank(message = "用户名不能为空")
         @Pattern(regexp = "^[a-zA-Z0-9_]{4,20}$", message = "用户名需为 4-20 位字母、数字或下划线")

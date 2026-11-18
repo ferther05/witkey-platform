@@ -1,3 +1,4 @@
+// BidService —— 业务：投标、改标、撤标、选标（生成担保订单）
 package com.psc.witkey.service;
 
 import com.psc.witkey.common.BusinessException;
@@ -47,7 +48,9 @@ public class BidService {
         this.noticeService = noticeService;
     }
 
+    // 提交审核结果
     @Transactional
+    // 提交
     public BidVO submit(Long userId, BidRequest req) {
         Task task = taskRepository.findById(req.taskId())
                 .orElseThrow(() -> new BusinessException(404, "任务不存在"));
@@ -60,11 +63,25 @@ public class BidService {
         if (task.getDeadline().isBefore(LocalDateTime.now())) {
             throw new BusinessException("任务已截止，无法投标");
         }
-        if (bidRepository.findByTaskIdAndWitkeyId(req.taskId(), userId).isPresent()) {
-            throw new BusinessException("你已经投过这个任务，可以修改方案");
-        }
         if (req.quote().compareTo(task.getBudget()) > 0) {
             throw new BusinessException("报价不能高于任务赏金");
+        }
+
+        // 撤标后允许重新投标：复用原记录并恢复为待选，避免"你已经投过"卡死
+        java.util.Optional<Bid> existing = bidRepository.findByTaskIdAndWitkeyId(req.taskId(), userId);
+        if (existing.isPresent()) {
+            Bid old = existing.get();
+            if (!BidStatus.WITHDRAWN.name().equals(old.getStatus())) {
+                throw new BusinessException("你已经投过这个任务，可以修改方案");
+            }
+            old.setQuote(req.quote());
+            old.setContent(req.content().trim());
+            old.setStatus(BidStatus.PENDING.name());
+            Bid saved = bidRepository.save(old);
+            refreshBidCount(task);
+            noticeService.push(task.getEmployerId(), "TRADE", "收到新的投标",
+                    "任务《" + task.getTitle() + "》收到一份新的投标方案。", "TASK", task.getId());
+            return toVO(saved, task);
         }
 
         Bid bid = new Bid();
@@ -83,7 +100,9 @@ public class BidService {
         return toVO(saved, task);
     }
 
+    // 更新任务：重新回到待审核并调整托管金额
     @Transactional
+    // 更新数据
     public BidVO update(Long userId, Long bidId, BidRequest req) {
         Bid bid = requireOwnBid(userId, bidId);
         if (!BidStatus.PENDING.name().equals(bid.getStatus())) {
@@ -102,7 +121,9 @@ public class BidService {
         return toVO(bidRepository.save(bid), task);
     }
 
+    // 撤回：任务撤回 / 提现，按类语义执行
     @Transactional
+    // 撤回 / 提现
     public void withdraw(Long userId, Long bidId) {
         Bid bid = requireOwnBid(userId, bidId);
         if (!BidStatus.PENDING.name().equals(bid.getStatus())) {
@@ -117,6 +138,7 @@ public class BidService {
      * 雇主选标：中标者 WIN，其余 LOSE，任务进入进行中，同时生成担保订单。
      */
     @Transactional
+    // 选标生成订单
     public BizOrder select(Long userId, Long bidId) {
         Bid bid = bidRepository.findById(bidId)
                 .orElseThrow(() -> new BusinessException(404, "投标不存在"));
@@ -155,6 +177,7 @@ public class BidService {
         return order;
     }
 
+    // 查询某任务下的投标
     public List<BidVO> listByTask(Long taskId, Long viewerId, boolean isAdmin) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(404, "任务不存在"));
@@ -164,6 +187,7 @@ public class BidService {
         return toVOList(bidRepository.findByTaskIdOrderByCreatedAtAsc(taskId), task);
     }
 
+    // 我的投标列表
     public List<BidVO> myBids(Long userId) {
         List<Bid> bids = bidRepository.findByWitkeyIdOrderByCreatedAtDesc(userId);
         if (bids.isEmpty()) {
@@ -183,6 +207,7 @@ public class BidService {
 
     // ------------------------------------------------------------------ 内部
 
+    // 取投标并校验属于当前用户
     private Bid requireOwnBid(Long userId, Long bidId) {
         Bid bid = bidRepository.findById(bidId)
                 .orElseThrow(() -> new BusinessException(404, "投标不存在"));
@@ -192,16 +217,19 @@ public class BidService {
         return bid;
     }
 
+    // 刷新任务上的投标数量
     private void refreshBidCount(Task task) {
         long count = bidRepository.countByTaskIdAndStatus(task.getId(), BidStatus.PENDING.name());
         task.setBidCount((int) count);
         taskRepository.save(task);
     }
 
+    // 实体转响应对象
     private BidVO toVO(Bid bid, Task task) {
         return toVOList(List.of(bid), task).get(0);
     }
 
+    // 批量实体转响应对象
     private List<BidVO> toVOList(List<Bid> bids, Task task) {
         if (bids.isEmpty()) {
             return List.of();

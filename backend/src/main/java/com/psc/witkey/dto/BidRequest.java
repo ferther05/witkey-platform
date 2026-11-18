@@ -1,3 +1,4 @@
+// BidRequest —— 请求体：投标/改标（任务 id、报价、方案说明）
 package com.psc.witkey.dto;
 
 import jakarta.validation.constraints.DecimalMin;
@@ -7,6 +8,9 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
+/**
+ * 请求体：投标/改标（任务 id、报价、方案说明）。
+ */
 public record BidRequest(
         @NotNull(message = "缺少任务 id") Long taskId,
 

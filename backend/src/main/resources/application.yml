@@ -28,8 +28,14 @@ spring:
 
 witkey:
   storage:
-    # 本地磁盘存储；换成 MinIO/OSS 只需新增一个 FileStorage 实现
+    # 存储类型：local=本地磁盘（默认）；minio=对象存储（桶不存在会自动创建）
+    type: ${STORAGE_TYPE:local}
     root: ${STORAGE_ROOT:./uploads}
+    minio:
+      endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000}
+      access-key: ${MINIO_ACCESS_KEY:}
+      secret-key: ${MINIO_SECRET_KEY:}
+      bucket: ${MINIO_BUCKET:witkey-platform}
   jwt:
     # 生产环境请务必替换，至少 32 字节
     secret: ${JWT_SECRET:witkey-platform-dev-secret-key-please-change-in-production-2026}

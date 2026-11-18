@@ -1,3 +1,4 @@
+// FinanceSummaryVO —— 响应体：平台资金汇总
 package com.psc.witkey.dto;
 
 import java.math.BigDecimal;

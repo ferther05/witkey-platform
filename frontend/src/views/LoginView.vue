@@ -1,3 +1,4 @@
+<!-- views/LoginView.vue：页面：登录 / 注册（含演示账号一键填入） -->
 <template>
   <div class="login">
     <!-- 背景装饰 -->
@@ -221,12 +222,14 @@ const registerRules = {
   identityType: [{ required: true, message: '请选择身份', trigger: 'change' }]
 }
 
+// 一键填入演示账号
 function fillDemo(account) {
   loginForm.username = account.username
   loginForm.password = account.password
   ElMessage.success(`已填入「${account.label}」账号，点击登录即可`)
 }
 
+// 提交登录表单
 async function onLogin() {
   await loginRef.value?.validate().catch(() => Promise.reject())
   loading.value = true
@@ -239,6 +242,7 @@ async function onLogin() {
   }
 }
 
+// 提交注册表单
 async function onRegister() {
   await registerRef.value?.validate().catch(() => Promise.reject())
   loading.value = true

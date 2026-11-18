@@ -1,3 +1,4 @@
+// WalletAccount —— 实体：钱包账户（对应表 wallet_account），余额 +
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;
@@ -23,6 +24,9 @@ import java.time.LocalDateTime;
 @Table(name = "wallet_account", uniqueConstraints = {
         @UniqueConstraint(name = "uk_wallet_user", columnNames = "user_id")
 })
+/**
+ * 实体：钱包账户（对应表 wallet_account），余额 + 冻结。
+ */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -1,3 +1,4 @@
+// TaskFavorite —— 实体：任务收藏关系（对应表 task_favorite）
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;
@@ -18,6 +19,9 @@ import java.time.LocalDateTime;
 @Table(name = "task_favorite", uniqueConstraints = {
         @UniqueConstraint(name = "uk_favorite_user_task", columnNames = {"user_id", "task_id"})
 })
+/**
+ * 实体：任务收藏关系（对应表 task_favorite）。
+ */
 @Getter
 @Setter
 @NoArgsConstructor

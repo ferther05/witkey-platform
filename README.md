@@ -11,12 +11,12 @@
 
 | 模块 | 功能 |
 |---|---|
-| 用户与权限 | 注册登录（JWT）、个人资料、头像上传、实名认证、雇主 ⇄ 威客身份切换、站内消息 |
+| 用户与权限 | 注册登录（JWT）、个人资料、头像上传、实名认证（提交 + 管理员审核）、雇主 ⇄ 威客身份切换、站内消息 |
 | 任务管理 | 发布（发布即冻结赏金）、编辑、撤回、平台审核（通过/驳回）、大厅搜索筛选排序、收藏、状态机 |
 | 投标与交付 | 威客投标/改标/撤标、雇主查看对比投标、选标生成担保订单、多版本交付（带附件）、验收与驳回 |
 | 担保交易与资金 | 赏金托管（冻结/解冻）、验收结算（扣佣金）、模拟充值/提现、资金流水、账户对账、到期自动流标 |
-| 文件存储 | 上传校验（类型/大小）、在线预览、鉴权下载、后台文件管理（存储层接口化，可换 MinIO/OSS） |
-| 后台管理 | 数据看板（ECharts）、任务审核、举报处理（下架/封禁/强制退款/强制打款）、用户封禁、分类维护、财务总览 |
+| 文件存储 | 上传校验（类型/大小）、在线预览、鉴权下载、后台文件管理（筛选/上传人/存储位置/引用校验）；**支持本地磁盘与 MinIO 对象存储一键切换** |
+| 后台管理 | 数据看板（ECharts）、任务审核、举报处理（下架/封禁/强制退款/强制打款）、用户管理（详情/重置密码/实名审核）、分类维护、财务总览（平台流水 + CSV 导出）、**操作日志** |
 
 ### 页面预览
 
@@ -34,7 +34,7 @@
 
 **前端**：Vue 3 · Vite · Vue Router · Pinia · Element Plus · ECharts · Axios
 
-**存储**：MySQL（11 张表）+ 本地文件存储（`FileStorage` 接口，可替换为 MinIO / 阿里云 OSS）
+**存储**：MySQL（12 张表）+ `FileStorage` 接口（默认本地磁盘，可选 **MinIO** 对象存储，S3 兼容）
 
 ## 目录结构
 
@@ -53,7 +53,7 @@ witkey-platform/
 │     ├─ repository/           JPA 数据访问
 │     ├─ security/             JWT、过滤器、鉴权工具
 │     ├─ service/              业务逻辑（核心）
-│     ├─ storage/              文件存储抽象与本地实现
+│     ├─ storage/              文件存储抽象 + 本地/MiNIO 两种实现
 │     └─ task/                 定时任务（到期流标）
 └─ frontend/                   Vue 3 前端（端口 5174）
    └─ src/
@@ -93,7 +93,11 @@ mvn spring-boot:run          # 或 mvn clean package 后 java -jar target/witkey
 | `MYSQL_DB` | witkey_platform | 库名 |
 | `MYSQL_USER` / `MYSQL_PASSWORD` | root / 114514 | 数据库账号 |
 | `JWT_SECRET` | 内置开发密钥 | 生产请替换（≥32 字节） |
-| `STORAGE_ROOT` | ./uploads | 上传文件目录 |
+| `STORAGE_ROOT` | ./uploads | 本地存储目录（`STORAGE_TYPE=local` 时生效） |
+| `STORAGE_TYPE` | local | `local` 本地磁盘 / `minio` 对象存储 |
+| `MINIO_ENDPOINT` | http://127.0.0.1:9000 | MinIO 地址 |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | 空 | MinIO 访问密钥 |
+| `MINIO_BUCKET` | witkey-platform | 桶名（不存在会自动创建） |
 
 ### 3. 启动前端
 
@@ -113,6 +117,21 @@ npm run dev
 | 自行注册 | — | 注册时可选「雇主」或「威客」 |
 
 管理员初始账号由 `DataInitializer` 在首次启动时写入。
+
+### 使用 MinIO 对象存储（可选）
+
+默认用本地磁盘。想演示对象存储时，先启动 MinIO 并准备好密钥，然后：
+
+```bash
+export STORAGE_TYPE=minio
+export MINIO_ENDPOINT=http://127.0.0.1:9000
+export MINIO_ACCESS_KEY=你的accessKey
+export MINIO_SECRET_KEY=你的secretKey
+export MINIO_BUCKET=witkey-platform
+```
+
+后端启动时会自动建桶；上传的文件会出现在 MinIO 控制台，`file_resource.bucket` 记录桶名，
+后台「文件管理 - 存储位置」会显示 `桶名 / 对象键`。读取仍走后端鉴权接口，桶保持私有。
 
 ## 核心设计
 

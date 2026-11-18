@@ -1,3 +1,4 @@
+// PublicOverviewVO —— 响应体：首页公开概览（任务数、成交额、用户数）
 package com.psc.witkey.dto;
 
 import java.math.BigDecimal;

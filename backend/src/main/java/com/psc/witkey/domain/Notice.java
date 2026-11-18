@@ -1,3 +1,4 @@
+// Notice —— 实体：站内消息（对应表 notice）
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;
@@ -21,6 +22,9 @@ import java.time.LocalDateTime;
 @Table(name = "notice", indexes = {
         @Index(name = "idx_notice_user_read", columnList = "user_id,is_read")
 })
+/**
+ * 实体：站内消息（对应表 notice）。
+ */
 @Getter
 @Setter
 @NoArgsConstructor

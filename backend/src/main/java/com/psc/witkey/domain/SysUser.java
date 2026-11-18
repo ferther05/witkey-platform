@@ -1,3 +1,4 @@
+// SysUser —— 实体：用户（对应表 sys_user），含身份、认证、封禁状态
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;
@@ -60,6 +61,10 @@ public class SysUser {
     @Column(name = "auth_status", nullable = false, length = 20)
     private String authStatus = AuthStatus.UNVERIFIED.name();
 
+    /** 实名认证审核意见（驳回时填，用户可在个人中心看到） */
+    @Column(name = "auth_remark", length = 255)
+    private String authRemark;
+
     @Column(name = "real_name", length = 50)
     private String realName;
 
@@ -85,6 +90,7 @@ public class SysUser {
         this.updatedAt = LocalDateTime.now();
     }
 
+    // 判断Banned
     public boolean isBanned() {
         return status == null || status == 0;
     }

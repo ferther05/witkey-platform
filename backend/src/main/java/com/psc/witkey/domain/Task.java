@@ -1,3 +1,4 @@
+// Task —— 实体：任务（对应表 task），含状态机、赏金、附件
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;
@@ -24,6 +25,9 @@ import java.time.LocalDateTime;
         @Index(name = "idx_task_status_cat", columnList = "status,category_id,created_at"),
         @Index(name = "idx_task_employer", columnList = "employer_id")
 })
+/**
+ * 实体：任务（对应表 task），含状态机、赏金、附件。
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -62,6 +66,10 @@ public class Task {
 
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
+
+    /** 任务附件（逗号分隔的 file_resource.id），发布时可带上需求文档/参考图 */
+    @Column(name = "file_ids", length = 512)
+    private String fileIds;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

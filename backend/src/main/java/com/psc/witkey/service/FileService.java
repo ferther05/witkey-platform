@@ -1,3 +1,4 @@
+// FileService —— 业务：文件上传校验、读取鉴权、后台文件管理
 package com.psc.witkey.service;
 
 import com.psc.witkey.common.BusinessException;
@@ -6,7 +7,10 @@ import com.psc.witkey.domain.BizOrder;
 import com.psc.witkey.domain.FileResource;
 import com.psc.witkey.dto.FileVO;
 import com.psc.witkey.repository.BizOrderRepository;
+import com.psc.witkey.repository.BizOrderRepository;
 import com.psc.witkey.repository.FileResourceRepository;
+import com.psc.witkey.repository.SysUserRepository;
+import com.psc.witkey.repository.TaskRepository;
 import com.psc.witkey.storage.FileStorage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,17 +37,26 @@ public class FileService {
     private static final long MAX_SIZE = 20L * 1024 * 1024;
 
     private final FileResourceRepository fileRepository;
+    private final TaskRepository taskRepository;
     private final BizOrderRepository orderRepository;
+    private final SysUserRepository userRepository;
     private final FileStorage storage;
 
-    public FileService(FileResourceRepository fileRepository, BizOrderRepository orderRepository,
+    public FileService(FileResourceRepository fileRepository,
+                       TaskRepository taskRepository,
+                       BizOrderRepository orderRepository,
+                       SysUserRepository userRepository,
                        FileStorage storage) {
         this.fileRepository = fileRepository;
+        this.taskRepository = taskRepository;
         this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
         this.storage = storage;
     }
 
+    // 上传文件：校验扩展名与大小并落盘
     @Transactional
+    // 上传文件
     public FileVO upload(Long userId, MultipartFile multipart, String bizType, Long bizId) {
         if (multipart == null || multipart.isEmpty()) {
             throw new BusinessException("请选择要上传的文件");
@@ -74,7 +87,7 @@ public class FileService {
         FileResource file = new FileResource();
         file.setOriginalName(original);
         file.setObjectKey(key);
-        file.setBucket("local");
+        file.setBucket(storage.bucketName());
         file.setSize((long) bytes.length);
         file.setContentType(multipart.getContentType());
         file.setUploaderId(userId);
@@ -83,6 +96,7 @@ public class FileService {
         return FileVO.from(fileRepository.save(file));
     }
 
+    // 获取
     public FileResource get(Long id) {
         return fileRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "文件不存在"));
@@ -121,10 +135,12 @@ public class FileService {
         }
     }
 
+    // 读取文件字节内容
     public byte[] read(FileResource file) {
         return storage.load(file.getObjectKey());
     }
 
+    // 按 id 集合查询
     public List<FileVO> listByIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return List.of();
@@ -132,17 +148,66 @@ public class FileService {
         return fileRepository.findByIdIn(ids).stream().map(FileVO::from).toList();
     }
 
-    public PageResult<FileVO> page(int page, int size) {
+    // 分页查询
+    public PageResult<FileVO> page(String bizType, String keyword,
+                                   java.time.LocalDateTime start, java.time.LocalDateTime end,
+                                   int page, int size) {
         int p = Math.max(page, 1);
-        int s = Math.min(Math.max(size, 1), 50);
-        Page<FileResource> result = fileRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(p - 1, s));
-        return new PageResult<>(result.getContent().stream().map(FileVO::from).toList(),
-                result.getTotalElements(), p, s);
+        int s = Math.min(Math.max(size, 1), 100);
+        var spec = (org.springframework.data.jpa.domain.Specification<FileResource>) (root, query, cb) -> {
+            var ps = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
+            if (bizType != null && !bizType.isBlank()) {
+                ps.add(cb.equal(root.get("bizType"), bizType.trim().toUpperCase()));
+            }
+            if (keyword != null && !keyword.isBlank()) {
+                String like = "%" + keyword.trim() + "%";
+                ps.add(cb.or(cb.like(root.get("originalName"), like),
+                        cb.like(root.get("objectKey"), like)));
+            }
+            if (start != null) {
+                ps.add(cb.greaterThanOrEqualTo(root.get("createdAt"), start));
+            }
+            if (end != null) {
+                ps.add(cb.lessThanOrEqualTo(root.get("createdAt"), end));
+            }
+            return cb.and(ps.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+        Page<FileResource> result = fileRepository.findAll(spec, PageRequest.of(p - 1, s,
+                org.springframework.data.domain.Sort.by(
+                        org.springframework.data.domain.Sort.Direction.DESC, "createdAt")));
+
+        // 补上传人昵称
+        var uploaderIds = result.getContent().stream().map(FileResource::getUploaderId)
+                .filter(java.util.Objects::nonNull).distinct().toList();
+        var names = userRepository.findAllById(uploaderIds).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        com.psc.witkey.domain.SysUser::getId,
+                        u -> u.getNickname() == null || u.getNickname().isBlank()
+                                ? u.getUsername() : u.getNickname()));
+
+        var list = result.getContent().stream().map(f -> {
+            FileVO vo = FileVO.from(f);
+            return new FileVO(vo.id(), vo.name(), vo.size(), vo.contentType(), vo.bizType(),
+                    vo.bizId(), vo.uploaderId(), vo.url(), vo.image(), vo.createdAt(),
+                    names.getOrDefault(f.getUploaderId(), "未知用户"),
+                    (f.getBucket() == null ? "local" : f.getBucket()) + " / " + f.getObjectKey());
+        }).toList();
+        return new PageResult<>(list, result.getTotalElements(), p, s);
     }
 
+    // 删除
     @Transactional
+    // 删除
     public void delete(Long id) {
         FileResource file = get(id);
+        // 被任务附件 / 交付附件 / 头像引用时不允许删除，避免业务数据出现死链
+        String fid = String.valueOf(id);
+        long refs = taskRepository.countByFileRef(fid)
+                + orderRepository.countByDeliverFileRef(fid)
+                + userRepository.countByAvatarContaining("/api/file/" + fid + "/");
+        if (refs > 0) {
+            throw new BusinessException("该文件正被 " + refs + " 处引用（任务附件/交付附件/头像），请先解除引用再删除");
+        }
         storage.delete(file.getObjectKey());
         fileRepository.delete(file);
     }

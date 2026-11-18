@@ -1,3 +1,4 @@
+// StatsService —— 业务：数据看板统计与公开概览
 package com.psc.witkey.service;
 
 import com.psc.witkey.domain.BizOrder;
@@ -59,6 +60,7 @@ public class StatsService {
                 finance.totalCommission());
     }
 
+    // 统计后台看板数据
     public DashboardVO dashboard() {
         var finance = financeService.summary();
         List<BizOrder> orders = orderRepository.findAll();
@@ -79,6 +81,7 @@ public class StatsService {
                 buildCategoryStats(tasks, categories));
     }
 
+    // 统计近 7 天订单数与成交额
     private List<DashboardVO.TrendPoint> buildTrend(List<BizOrder> orders) {
         LocalDate today = LocalDate.now();
         Map<LocalDate, List<BizOrder>> byDay = new LinkedHashMap<>();
@@ -101,6 +104,7 @@ public class StatsService {
                 .toList();
     }
 
+    // 统计各分类的任务数量
     private List<DashboardVO.CategoryStat> buildCategoryStats(List<Task> tasks, List<TaskCategory> categories) {
         Map<Long, Long> countByCategory = new java.util.HashMap<>();
         for (Task task : tasks) {

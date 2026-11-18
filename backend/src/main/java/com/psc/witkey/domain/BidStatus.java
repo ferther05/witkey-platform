@@ -1,3 +1,4 @@
+// BidStatus —— 枚举：投标状态（待选/中标/落选/已撤回）
 package com.psc.witkey.domain;
 
 /**

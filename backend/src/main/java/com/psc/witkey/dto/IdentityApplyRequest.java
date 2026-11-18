@@ -1,9 +1,13 @@
+// IdentityApplyRequest —— 请求体：实名认证申请（真实姓名、手机号）
 package com.psc.witkey.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * 请求体：实名认证申请（真实姓名、手机号）。
+ */
 public record IdentityApplyRequest(
         @NotBlank(message = "真实姓名不能为空")
         @Size(max = 50, message = "姓名过长")

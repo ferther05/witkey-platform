@@ -1,3 +1,4 @@
+<!-- views/NoticeView.vue：页面：消息中心（未读、已读、分页） -->
 <template>
   <div class="notice">
     <div class="head">
@@ -58,15 +59,18 @@ const page = ref(1)
 const size = ref(8)
 const loading = ref(false)
 
+// 时间格式化
 function formatTime(value) {
   if (!value) return ''
   return value.replace('T', ' ').slice(0, 16)
 }
 
+// 重新计算统计值
 function recount() {
   unread.value = list.value.filter((i) => !i.read).length
 }
 
+// 加载页面数据
 async function load() {
   loading.value = true
   try {
@@ -80,6 +84,7 @@ async function load() {
   }
 }
 
+// 标记单条消息已读
 async function onRead(item) {
   if (item.read) return
   await markRead(item.id)
@@ -87,12 +92,14 @@ async function onRead(item) {
   recount()
 }
 
+// 事件处理：ReadAll
 async function onReadAll() {
   await markAllRead()
   ElMessage.success('已全部标为已读')
   await load()
 }
 
+// 事件处理：PageChange
 function onPageChange(p) {
   page.value = p
   load()

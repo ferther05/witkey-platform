@@ -1,3 +1,4 @@
+// FileResource —— 实体：文件元信息（对应表 file_resource）
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;
@@ -22,6 +23,9 @@ import java.time.LocalDateTime;
         @Index(name = "idx_file_uploader", columnList = "uploader_id"),
         @Index(name = "idx_file_biz", columnList = "biz_type,biz_id")
 })
+/**
+ * 实体：文件元信息（对应表 file_resource），真实内容存在磁盘。
+ */
 @Getter
 @Setter
 @NoArgsConstructor

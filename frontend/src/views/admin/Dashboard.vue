@@ -1,3 +1,4 @@
+<!-- views/admin/Dashboard.vue：页面：后台数据看板（指标卡 + 趋势图 + 分类分布） -->
 <template>
   <div class="dashboard" v-loading="loading">
     <h2 class="wk-page-title">数据看板</h2>
@@ -73,6 +74,7 @@ const data = reactive({
 let chartTrend = null
 let chartPie = null
 
+// 绘制趋势图
 function renderTrend() {
   chartTrend = echarts.init(trendRef.value)
   chartTrend.setOption({
@@ -106,6 +108,7 @@ function renderTrend() {
   })
 }
 
+// 绘制分类饼图
 function renderPie() {
   chartPie = echarts.init(pieRef.value)
   chartPie.setOption({
@@ -126,6 +129,7 @@ function renderPie() {
   })
 }
 
+// 监听容器尺寸变化并重绘图表
 function observeResize() {
   const observer = new ResizeObserver(() => {
     chartTrend?.resize()

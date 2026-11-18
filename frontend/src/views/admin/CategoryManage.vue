@@ -1,3 +1,4 @@
+<!-- views/admin/CategoryManage.vue：页面：后台分类维护（增删改、佣金比例） -->
 <template>
   <div class="category">
     <div class="head">
@@ -73,6 +74,7 @@ const editing = ref(null)
 
 const form = reactive({ name: '', commissionRate: 10, sort: 0 })
 
+// 加载页面数据
 async function load() {
   loading.value = true
   try {
@@ -82,6 +84,7 @@ async function load() {
   }
 }
 
+// 打开新建弹窗
 function openCreate() {
   editing.value = null
   form.name = ''
@@ -90,6 +93,7 @@ function openCreate() {
   dialog.value = true
 }
 
+// 打开编辑弹窗
 function openEdit(row) {
   editing.value = row
   form.name = row.name
@@ -98,6 +102,7 @@ function openEdit(row) {
   dialog.value = true
 }
 
+// 事件处理：Save
 async function onSave() {
   if (!form.name.trim()) return ElMessage.warning('请填写分类名称')
   saving.value = true
@@ -116,12 +121,14 @@ async function onSave() {
   }
 }
 
+// 切换状态
 async function toggle(row) {
   await adminUpdateCategory(row.id, { status: row.status === 1 ? 0 : 1 })
   ElMessage.success('状态已更新')
   await load()
 }
 
+// 事件处理：Delete
 async function onDelete(row) {
   try {
     await ElMessageBox.confirm(`确定删除分类「${row.name}」吗？`, '删除分类', { type: 'warning' })

@@ -1,3 +1,4 @@
+<!-- views/TaskDetail.vue：页面：任务详情（描述、附件、投标对比、雇主操作） -->
 <template>
   <div v-loading="loading" class="detail">
     <el-page-header content="任务详情" @back="router.back()" class="back" />
@@ -31,6 +32,19 @@
 
         <h3 class="section-title">任务描述</h3>
         <p class="desc">{{ task.description }}</p>
+
+        <!-- 任务附件（发布时上传的需求文档 / 参考图） -->
+        <div v-if="task.files && task.files.length" class="attachments">
+          <h3 class="section-title">任务附件</h3>
+          <div class="attach-list">
+            <a v-for="f in task.files" :key="f.id" class="attach-item"
+               :href="`/api/file/${f.id}/download`" target="_blank" rel="noreferrer">
+              <el-icon><Document /></el-icon>
+              <span class="attach-name">{{ f.name }}</span>
+              <span class="wk-muted small">{{ (f.size / 1024).toFixed(0) }} KB</span>
+            </a>
+          </div>
+        </div>
 
         <h3 class="section-title">
           投标情况
@@ -116,7 +130,7 @@
             <el-button v-if="isOwner" @click="router.push(`/tasks/${task.id}/edit`)">编辑任务</el-button>
             <el-button v-if="isOwner && canEdit" type="danger" plain @click="onWithdraw">撤回任务</el-button>
 
-            <template v-if="!isOwner">
+            <template v-if="!isOwner && !isAdmin">
               <el-button
                 v-if="!myBid && task.status === 'RECRUITING'"
                 type="primary" @click="openBidDialog()"
@@ -128,12 +142,12 @@
               </el-button>
             </template>
 
-            <el-button @click="onFavorite" :type="task.favorite ? 'warning' : 'default'" plain>
+            <el-button v-if="!isAdmin" @click="onFavorite" :type="task.favorite ? 'warning' : 'default'" plain>
               <el-icon><StarFilled v-if="task.favorite" /><Star v-else /></el-icon>
               {{ task.favorite ? '已收藏' : '收藏' }}
             </el-button>
 
-            <el-button v-if="!isOwner" text class="report" @click="reportVisible = true">
+            <el-button v-if="!isOwner && !isAdmin" text class="report" @click="reportVisible = true">
               举报此任务
             </el-button>
           </div>
@@ -192,6 +206,8 @@ import ReportDialog from '@/components/ReportDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
+// 是否管理员（管理员只看不操作）
+const isAdmin = computed(() => store.profile?.role === 'ADMIN')
 const store = useUserStore()
 
 const task = ref(null)
@@ -213,6 +229,7 @@ const myBid = computed(() => {
   return bids.value.find((b) => b.witkeyId === store.profile.id) || null
 })
 
+// 加载页面数据
 async function load() {
   loading.value = true
   try {
@@ -232,6 +249,7 @@ async function load() {
   }
 }
 
+// 打开投标弹窗
 function openBidDialog(existing) {
   if (!getToken()) {
     router.push({ path: '/login', query: { redirect: route.fullPath } })
@@ -243,6 +261,7 @@ function openBidDialog(existing) {
   bidDialog.value = true
 }
 
+// 事件处理：SubmitBid
 async function onSubmitBid() {
   if (!bidForm.content.trim()) return ElMessage.warning('请填写方案说明')
   submitting.value = true
@@ -261,6 +280,7 @@ async function onSubmitBid() {
   }
 }
 
+// 事件处理：WithdrawBid
 async function onWithdrawBid() {
   try {
     await ElMessageBox.confirm('撤回后该投标不再展示给雇主，确定撤回吗？', '撤回投标', { type: 'warning' })
@@ -272,6 +292,7 @@ async function onWithdrawBid() {
   await load()
 }
 
+// 选标
 async function onSelect(bid) {
   try {
     await ElMessageBox.confirm(
@@ -287,6 +308,7 @@ async function onSelect(bid) {
   router.push(`/orders/${data.orderId}`)
 }
 
+// 事件处理：Favorite
 async function onFavorite() {
   if (!getToken()) {
     router.push({ path: '/login', query: { redirect: route.fullPath } })
@@ -297,6 +319,7 @@ async function onFavorite() {
   ElMessage.success(data.favorite ? '已收藏' : '已取消收藏')
 }
 
+// 撤回 / 提现
 async function onWithdraw() {
   try {
     await ElMessageBox.confirm(
@@ -388,5 +411,28 @@ onMounted(async () => {
 @media (max-width: 1000px) {
   .layout { grid-template-columns: 1fr; }
   .side { position: static; }
+}
+.attachments { margin-bottom: 8px; }
+
+.attach-list { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.attach-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f7f8fa;
+  border: 1px solid var(--wk-border);
+  font-size: 13px;
+}
+
+.attach-item:hover { border-color: var(--wk-primary); color: var(--wk-primary); }
+
+.attach-name {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

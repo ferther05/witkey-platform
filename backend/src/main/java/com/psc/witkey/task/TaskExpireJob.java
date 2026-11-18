@@ -1,3 +1,4 @@
+// TaskExpireJob —— 定时任务：任务到期无人中标则流标退赏金
 package com.psc.witkey.task;
 
 import com.psc.witkey.domain.Task;
@@ -8,6 +9,7 @@ import com.psc.witkey.service.WalletService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
+import com.psc.witkey.service.OpLog;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,8 +36,10 @@ public class TaskExpireJob {
         this.noticeService = noticeService;
     }
 
+    // 扫描到期未中标的任务并流标退赏金
     @Scheduled(fixedDelay = 60_000, initialDelay = 30_000)
     @Transactional
+    // 流标到期任务
     public void flowExpiredTasks() {
         List<Task> expired = taskRepository.findByStatusAndDeadlineBefore(
                 TaskStatus.RECRUITING.name(), LocalDateTime.now());

@@ -1,3 +1,4 @@
+// ReportService —— 业务：举报工单创建与处理（含强制退款/打款等副作用）
 package com.psc.witkey.service;
 
 import com.psc.witkey.common.BusinessException;
@@ -53,7 +54,9 @@ public class ReportService {
         this.fileService = fileService;
     }
 
+    // 提交审核结果
     @Transactional
+    // 提交
     public void submit(Long userId, CreateReportRequest req) {
         // 校验举报对象确实存在，避免垃圾数据
         switch (req.targetType()) {
@@ -79,6 +82,7 @@ public class ReportService {
         reportRepository.save(report);
     }
 
+    // 分页查询
     public PageResult<ReportVO> page(String status, int page, int size) {
         int p = Math.max(page, 1);
         int s = Math.min(Math.max(size, 1), 50);
@@ -88,7 +92,9 @@ public class ReportService {
         return new PageResult<>(toVOList(result.getContent()), result.getTotalElements(), p, s);
     }
 
+    // 处理举报工单并按动作产生副作用
     @Transactional
+    // 处理举报
     public void handle(Long reportId, String action, String remark) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new BusinessException(404, "举报不存在"));
@@ -113,6 +119,7 @@ public class ReportService {
 
     // ------------------------------------------------------------------ 处理动作
 
+    // 下架任务并退回赏金
     private void takeDown(Report report) {
         if (!"TASK".equals(report.getTargetType())) {
             throw new BusinessException("只有举报任务才能下架");
@@ -132,6 +139,7 @@ public class ReportService {
                 "你的任务《" + task.getTitle() + "》因举报被平台下架，托管赏金已退回余额。", "TASK", task.getId());
     }
 
+    // 封禁用户：置为禁用状态
     private void ban(Report report) {
         if (!"USER".equals(report.getTargetType())) {
             throw new BusinessException("只有举报用户才能封禁");
@@ -142,6 +150,7 @@ public class ReportService {
         userRepository.save(user);
     }
 
+    // 强制退款给雇主
     private void refund(Report report) {
         BizOrder order = requireOrderForAction(report);
         if (!(OrderStatus.TO_DELIVER.name().equals(order.getStatus())
@@ -164,6 +173,7 @@ public class ReportService {
         report.setHandleOrderAction("REFUND");
     }
 
+    // 强制打款给威客（扣佣金）
     private void pay(Report report) {
         BizOrder order = requireOrderForAction(report);
         if (!(OrderStatus.TO_DELIVER.name().equals(order.getStatus())
@@ -187,6 +197,7 @@ public class ReportService {
         report.setHandleOrderAction("PAY");
     }
 
+    // 取订单并校验当前用户是当事人
     private BizOrder requireOrderForAction(Report report) {
         if (!"ORDER".equals(report.getTargetType())) {
             throw new BusinessException("只有举报订单才能执行退款/打款");
@@ -197,6 +208,7 @@ public class ReportService {
 
     // ------------------------------------------------------------------ 转换
 
+    // 批量实体转响应对象
     private List<ReportVO> toVOList(List<Report> reports) {
         if (reports.isEmpty()) {
             return List.of();

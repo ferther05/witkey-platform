@@ -1,3 +1,4 @@
+// TaskStatus —— 枚举：任务状态（待审核/已驳回/招募中/待选/进行中/待验收/完成
 package com.psc.witkey.domain;
 
 /**

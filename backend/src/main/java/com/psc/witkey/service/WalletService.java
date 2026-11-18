@@ -1,3 +1,4 @@
+// WalletService —— 业务：充值、提现、冻结解冻、结算、对账
 package com.psc.witkey.service;
 
 import com.psc.witkey.common.BusinessException;
@@ -32,6 +33,7 @@ public class WalletService {
         this.flowRepository = flowRepository;
     }
 
+    // 获取OrCreate
     public WalletAccount getOrCreate(Long userId) {
         return accountRepository.findByUserId(userId).orElseGet(() -> {
             WalletAccount account = new WalletAccount();
@@ -42,20 +44,42 @@ public class WalletService {
         });
     }
 
+    // 查询钱包账户信息（没有则创建）
     public WalletVO info(Long userId) {
         WalletAccount account = getOrCreate(userId);
         return new WalletVO(account.getBalance(), account.getFrozen());
     }
 
-    public PageResult<WalletFlow> flows(Long userId, int page, int size) {
+    // 查询资金流水列表
+    public PageResult<WalletFlow> flows(Long userId, String type,
+                                        java.time.LocalDateTime start, java.time.LocalDateTime end,
+                                        int page, int size) {
         int p = Math.max(page, 1);
-        int s = Math.min(Math.max(size, 1), 50);
-        Page<WalletFlow> result = flowRepository.findByUserIdOrderByCreatedAtDesc(
-                userId, PageRequest.of(p - 1, s));
+        int s = Math.min(Math.max(size, 1), 100);
+        var spec = (org.springframework.data.jpa.domain.Specification<WalletFlow>) (root, query, cb) -> {
+            var ps = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
+            ps.add(cb.equal(root.get("userId"), userId));
+            if (type != null && !type.isBlank()) {
+                ps.add(cb.equal(root.get("type"), type.trim().toUpperCase()));
+            }
+            if (start != null) {
+                ps.add(cb.greaterThanOrEqualTo(root.get("createdAt"), start));
+            }
+            if (end != null) {
+                ps.add(cb.lessThanOrEqualTo(root.get("createdAt"), end));
+            }
+            return cb.and(ps.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+        Page<WalletFlow> result = flowRepository.findAll(spec,
+                PageRequest.of(p - 1, s,
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Direction.DESC, "createdAt")));
         return new PageResult<>(result.getContent(), result.getTotalElements(), p, s);
     }
 
+    // 模拟充值：增加余额并记流水
     @Transactional
+    // 模拟充值
     public WalletAccount recharge(Long userId, BigDecimal amount) {
         WalletAccount account = getOrCreate(userId);
         account.setBalance(account.getBalance().add(amount));
@@ -68,6 +92,7 @@ public class WalletService {
      * 冻结：可用余额 -> 冻结余额。余额不足直接抛业务异常，由调用方事务回滚。
      */
     @Transactional
+    // 执行 freeze
     public void freeze(Long userId, BigDecimal amount, String bizNo, String remark) {
         if (flowRepository.existsByBizNo(bizNo)) {
             throw new BusinessException("重复的冻结请求");
@@ -86,6 +111,7 @@ public class WalletService {
      * 解冻：冻结余额 -> 可用余额。
      */
     @Transactional
+    // 执行 unfreeze
     public void unfreeze(Long userId, BigDecimal amount, String bizNo, String remark) {
         if (flowRepository.existsByBizNo(bizNo)) {
             throw new BusinessException("重复的解冻请求");
@@ -104,6 +130,7 @@ public class WalletService {
      * 模拟提现：演示环境即时到账，只扣余额 + 记一条流水，不做提现审核。
      */
     @Transactional
+    // 撤回 / 提现
     public WalletAccount withdraw(Long userId, BigDecimal amount) {
         if (amount.compareTo(new BigDecimal("50000")) > 0) {
             throw new BusinessException("单次提现不超过 5 万元");
@@ -148,6 +175,7 @@ public class WalletService {
      * bizNo 幂等，重复调用直接跳过，防止重复付款。
      */
     @Transactional
+    // 结算并分账
     public void settle(Long employerId, Long witkeyId, BigDecimal gross, BigDecimal fee,
                        String bizNo, String remark) {
         if (flowRepository.existsByBizNo(bizNo)) {
@@ -169,6 +197,7 @@ public class WalletService {
                 remark + "（已扣平台佣金 " + fee.stripTrailingZeros().toPlainString() + " 元）");
     }
 
+    // 写一条资金流水（带幂等号）
     private void writeFlow(WalletAccount account, String type, BigDecimal amount, String bizNo, String remark) {
         String finalNo = bizNo;
         if ("unique".equals(bizNo)) {

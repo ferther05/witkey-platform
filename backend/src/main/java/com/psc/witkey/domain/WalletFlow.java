@@ -1,3 +1,4 @@
+// WalletFlow —— 实体：资金流水（对应表 wallet_flow），bizNo
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;
@@ -23,6 +24,9 @@ import java.time.LocalDateTime;
 @Table(name = "wallet_flow",
         uniqueConstraints = @UniqueConstraint(name = "uk_flow_biz_no", columnNames = "biz_no"),
         indexes = @Index(name = "idx_flow_user_time", columnList = "user_id,created_at"))
+/**
+ * 实体：资金流水（对应表 wallet_flow），bizNo 唯一用于幂等。
+ */
 @Getter
 @Setter
 @NoArgsConstructor

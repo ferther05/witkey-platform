@@ -1,3 +1,4 @@
+<!-- views/TaskPublish.vue：页面：发布 / 编辑任务（含附件上传） -->
 <template>
   <div class="publish">
     <el-page-header :content="isEdit ? '编辑任务' : '发布任务'" @back="router.back()" class="back" />
@@ -42,6 +43,27 @@
             </el-form-item>
           </div>
 
+          <el-form-item label="任务附件（可选）">
+            <div class="attach-box">
+              <el-upload :auto-upload="false" :show-file-list="false" multiple :on-change="onPickFile">
+                <el-button :loading="uploading">
+                  <el-icon><Upload /></el-icon> 添加附件
+                </el-button>
+              </el-upload>
+              <span class="wk-muted small">需求文档 / 参考图，支持图片、PDF、文档，单个不超过 20MB</span>
+              <div v-if="files.length" class="attach-list">
+                <div v-for="f in files" :key="f.id" class="attach-item">
+                  <el-icon><Document /></el-icon>
+                  <span class="attach-name">{{ f.name }}</span>
+                  <span class="wk-muted small">{{ (f.size / 1024).toFixed(0) }} KB</span>
+                  <el-button text size="small" @click="removeFile(f.id)">
+                    <el-icon><Close /></el-icon>
+                  </el-button>
+                </div>
+              </div>
+            </div>
+          </el-form-item>
+
           <div class="submit-row">
             <el-button type="primary" size="large" :loading="submitting" @click="onSubmit">
               {{ isEdit ? '保存并重新提交审核' : '发布任务' }}
@@ -83,6 +105,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getCategories, getTaskDetail, publishTask, updateTask } from '@/api/task'
 import { getWallet } from '@/api/wallet'
+import { uploadFile } from '@/api/file'
 import { formatMoney } from '@/utils/format'
 
 const route = useRoute()
@@ -92,6 +115,8 @@ const isEdit = computed(() => !!route.params.id)
 const categories = ref([])
 const wallet = reactive({ balance: 0, frozen: 0 })
 const submitting = ref(false)
+const uploading = ref(false)
+const files = ref([])
 const formRef = ref()
 
 const form = reactive({
@@ -113,10 +138,32 @@ const rules = {
   deadline: [{ required: true, message: '请选择截止时间', trigger: 'change' }]
 }
 
+// 禁用今天之前的日期
 function disablePast(date) {
   return date.getTime() < Date.now() - 86400000
 }
 
+// 选择文件并上传
+async function onPickFile(uploadFileItem) {
+  const raw = uploadFileItem.raw
+  if (!raw) return
+  if (raw.size > 20 * 1024 * 1024) return ElMessage.warning('单个文件不能超过 20MB')
+  uploading.value = true
+  try {
+    const meta = await uploadFile(raw, 'TASK', isEdit ? Number(route.params.id) : undefined)
+    files.value.push(meta)
+    ElMessage.success('附件已上传')
+  } finally {
+    uploading.value = false
+  }
+}
+
+// 移除已选附件
+function removeFile(id) {
+  files.value = files.value.filter((f) => f.id !== id)
+}
+
+// 提交表单
 async function onSubmit() {
   await formRef.value?.validate().catch(() => Promise.reject())
   const amount = Number(form.budget)
@@ -198,6 +245,37 @@ onMounted(async () => {
 
 .half {
   flex: 1;
+}
+
+.attach-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.attach-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attach-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--wk-surface-2);
+  border: 1px solid var(--wk-border);
+  font-size: 12.5px;
+}
+
+.attach-name {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .submit-row {

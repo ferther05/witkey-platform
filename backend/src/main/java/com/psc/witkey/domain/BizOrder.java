@@ -1,3 +1,4 @@
+// BizOrder —— 实体：担保订单（对应表 biz_order），记录佣金快照与交付信息
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;
@@ -31,6 +32,9 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_order_employer", columnList = "employer_id"),
                 @Index(name = "idx_order_witkey", columnList = "witkey_id")
         })
+/**
+ * 实体：担保订单（对应表 biz_order），记录佣金快照与交付信息。
+ */
 @Getter
 @Setter
 @NoArgsConstructor

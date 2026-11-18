@@ -1,3 +1,4 @@
+// CreateReportRequest —— 请求体：发起举报（对象类型、对象 id、理由、凭证）
 package com.psc.witkey.dto;
 
 import jakarta.validation.constraints.NotBlank;
@@ -7,6 +8,9 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+/**
+ * 请求体：发起举报（对象类型、对象 id、理由、凭证）。
+ */
 public record CreateReportRequest(
         @NotBlank(message = "请选择举报对象类型")
         @Pattern(regexp = "TASK|USER|ORDER", message = "举报对象类型不合法")

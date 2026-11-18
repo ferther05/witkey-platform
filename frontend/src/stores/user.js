@@ -1,3 +1,4 @@
+// stores/user.js：登录态 store：token、用户信息、身份标签、登录/登出
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import * as authApi from '@/api/auth'
@@ -15,10 +16,13 @@ export const useUserStore = defineStore('user', () => {
 
   const isLogin = computed(() => !!token.value)
   const isAdmin = computed(() => profile.value?.role === 'ADMIN')
-  const identityLabel = computed(() =>
-    profile.value?.identityType === 'WITKEY' ? '威客' : '雇主'
-  )
+  // 管理员既不是雇主也不是威客，单独显示，避免后台账号顶着「雇主」标签
+  const identityLabel = computed(() => {
+    if (profile.value?.role === 'ADMIN') return '管理员'
+    return profile.value?.identityType === 'WITKEY' ? '威客' : '雇主'
+  })
 
+  // 调用登录接口并保存 token
   async function doLogin(form) {
     const data = await authApi.login(form)
     token.value = data.token
@@ -27,10 +31,12 @@ export const useUserStore = defineStore('user', () => {
     return data.user
   }
 
+  // 调用注册接口
   async function doRegister(form) {
     return authApi.register(form)
   }
 
+  // 拉取当前用户信息
   async function fetchProfile() {
     if (!token.value) return null
     loading.value = true
@@ -42,21 +48,25 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  // 保存个人资料
   async function saveProfile(form) {
     profile.value = await userApi.updateProfile(form)
     return profile.value
   }
 
+  // 提交实名认证
   async function applyRealName(form) {
     profile.value = await userApi.applyIdentity(form)
     return profile.value
   }
 
+  // 切换雇主/威客身份
   async function switchIdentity(identityType) {
     profile.value = await userApi.switchIdentityType(identityType)
     return profile.value
   }
 
+  // 退出登录并清理本地状态
   function logout() {
     token.value = ''
     profile.value = null

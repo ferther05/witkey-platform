@@ -1,3 +1,4 @@
+// IdentityType —— 枚举：账号身份（雇主/威客）
 package com.psc.witkey.domain;
 
 /**

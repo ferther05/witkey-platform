@@ -1,3 +1,4 @@
+// utils/format.js：工具：金额与时间格式化
 /** 状态 → 文案 / 颜色（全站统一，别在页面里各写一套） */
 const STATUS_META = {
   PENDING_AUDIT: { text: '待审核', type: 'warning' },
@@ -11,14 +12,17 @@ const STATUS_META = {
   FLOWED: { text: '已流标', type: 'info' }
 }
 
+// 功能：taskStatus
 export const taskStatus = (status) => STATUS_META[status] || { text: status, type: 'info' }
 
+// 时间格式化
 export function formatTime(value, withTime = true) {
   if (!value) return '-'
   const s = String(value).replace('T', ' ')
   return withTime ? s.slice(0, 16) : s.slice(0, 10)
 }
 
+// 金额格式化
 export function formatMoney(value) {
   const n = Number(value || 0)
   return n.toFixed(2)

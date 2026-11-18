@@ -1,3 +1,4 @@
+// DataInitializer —— 启动初始化：首次启动时创建默认管理员账号
 package com.psc.witkey.config;
 
 import com.psc.witkey.domain.AuthStatus;
@@ -26,7 +27,9 @@ public class DataInitializer implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // 定时任务入口
     @Override
+    // 定时任务入口
     public void run(String... args) {
         if (userRepository.existsByUsername("admin")) {
             return;

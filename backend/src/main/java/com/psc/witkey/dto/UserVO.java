@@ -1,3 +1,4 @@
+// UserVO —— 响应体：用户信息（不含密码）
 package com.psc.witkey.dto;
 
 import com.psc.witkey.domain.SysUser;
@@ -18,14 +19,16 @@ public record UserVO(
         String role,
         String identityType,
         String authStatus,
+        String authRemark,
         String realName,
         Integer status,
         LocalDateTime createdAt
 ) {
 
+    // 实体转响应对象
     public static UserVO from(SysUser u) {
         return new UserVO(u.getId(), u.getUsername(), u.getNickname(), u.getAvatar(), u.getIntro(),
-                u.getSkills(), u.getMobile(), u.getRole(), u.getIdentityType(), u.getAuthStatus(),
+                u.getSkills(), u.getMobile(), u.getRole(), u.getIdentityType(), u.getAuthStatus(), u.getAuthRemark(),
                 u.getRealName(), u.getStatus(), u.getCreatedAt());
     }
 }

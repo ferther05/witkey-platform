@@ -1,3 +1,4 @@
+// OrderStatus —— 枚举：订单状态（待交付/待验收/已完成/已退款）
 package com.psc.witkey.domain;
 
 /**

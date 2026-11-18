@@ -1,3 +1,4 @@
+// SecurityUtils —— 安全工具：从当前上下文中取登录用户 id / 角色
 package com.psc.witkey.security;
 
 import com.psc.witkey.common.BusinessException;
@@ -12,6 +13,7 @@ public final class SecurityUtils {
     private SecurityUtils() {
     }
 
+    // 取当前登录用户（未登录返回 null）
     public static LoginUser current() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !(auth.getPrincipal() instanceof LoginUser user)) {
@@ -29,10 +31,12 @@ public final class SecurityUtils {
         return user;
     }
 
+    // 取当前登录用户 id（未登录报 401）
     public static Long userId() {
         return current().id();
     }
 
+    // 判断Admin
     public static boolean isAdmin() {
         return "ADMIN".equals(current().role());
     }

@@ -1,3 +1,4 @@
+// JwtUtil —— JWT 工具：生成与解析令牌
 package com.psc.witkey.security;
 
 import io.jsonwebtoken.Claims;
@@ -26,6 +27,7 @@ public class JwtUtil {
         this.expireMillis = expireHours * 3600 * 1000;
     }
 
+    // 生成令牌
     public String generate(Long userId, String username, String role) {
         Date now = new Date();
         return Jwts.builder()

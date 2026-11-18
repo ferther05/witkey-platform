@@ -1,3 +1,4 @@
+// UserService —— 业务：个人资料、密码、实名认证、身份切换
 package com.psc.witkey.service;
 
 import com.psc.witkey.common.BusinessException;
@@ -28,16 +29,20 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // 获取ById
     public SysUser getById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "用户不存在"));
     }
 
+    // 查询当前登录用户信息
     public UserVO me(Long userId) {
         return UserVO.from(getById(userId));
     }
 
+    // 更新个人资料
     @Transactional
+    // 更新个人资料
     public UserVO updateProfile(Long userId, UpdateProfileRequest req) {
         SysUser user = getById(userId);
         if (req.nickname() != null && !req.nickname().isBlank()) {
@@ -52,7 +57,9 @@ public class UserService {
         return UserVO.from(userRepository.save(user));
     }
 
+    // 修改密码
     @Transactional
+    // 修改密码
     public void changePassword(Long userId, ChangePasswordRequest req) {
         SysUser user = getById(userId);
         if (!passwordEncoder.matches(req.oldPassword(), user.getPassword())) {
@@ -69,6 +76,7 @@ public class UserService {
      * 提交实名认证申请：未认证或已驳回状态下可提交，提交后进入待审核。
      */
     @Transactional
+    // 提交实名认证
     public UserVO applyIdentity(Long userId, IdentityApplyRequest req) {
         SysUser user = getById(userId);
         String current = user.getAuthStatus();
@@ -88,6 +96,7 @@ public class UserService {
      * 切换主身份（雇主 ⇄ 威客）。权限角色同步变更，避免出现"雇主发任务却无雇主权限"。
      */
     @Transactional
+    // 切换身份
     public UserVO switchIdentityType(Long userId, String identityType) {
         SysUser user = getById(userId);
         if (UserRole.ADMIN.name().equals(user.getRole())) {

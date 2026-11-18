@@ -1,3 +1,4 @@
+// main.js：前端入口：注册 Element Plus、图标、Pinia、路由与全局样式
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'

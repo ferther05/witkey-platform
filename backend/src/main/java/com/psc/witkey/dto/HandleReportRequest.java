@@ -1,3 +1,4 @@
+// HandleReportRequest —— 请求体：举报处理方式（驳回/下架/封禁/退款/打款）
 package com.psc.witkey.dto;
 
 import jakarta.validation.constraints.NotBlank;

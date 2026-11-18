@@ -1,8 +1,12 @@
+// OrderVO —— 响应体：订单详情（含佣金、交付附件、时间线）
 package com.psc.witkey.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * 响应体：订单详情（含佣金、交付附件、时间线）。
+ */
 public record OrderVO(
         Long id,
         String orderNo,

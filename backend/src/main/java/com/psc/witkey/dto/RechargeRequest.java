@@ -1,3 +1,4 @@
+// RechargeRequest —— 请求体：模拟充值金额
 package com.psc.witkey.dto;
 
 import jakarta.validation.constraints.DecimalMax;

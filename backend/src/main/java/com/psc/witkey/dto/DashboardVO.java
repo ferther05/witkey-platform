@@ -1,3 +1,4 @@
+// DashboardVO —— 响应体：后台看板数据（指标卡、趋势、分类分布）
 package com.psc.witkey.dto;
 
 import java.math.BigDecimal;

@@ -1,8 +1,12 @@
+// ReportVO —— 响应体：举报工单详情
 package com.psc.witkey.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 响应体：举报工单详情。
+ */
 public record ReportVO(
         Long id,
         Long reporterId,

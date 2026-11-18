@@ -1,3 +1,4 @@
+<!-- views/TaskHall.vue：页面：任务大厅（分类、预算筛选、排序、收藏） -->
 <template>
   <div class="hall">
     <div class="head">
@@ -5,7 +6,7 @@
         <h2 class="wk-page-title">任务大厅</h2>
         <p class="wk-page-desc">共 {{ total }} 个任务正在招募，赏金已由平台托管</p>
       </div>
-      <el-button type="primary" @click="router.push('/tasks/publish')">
+      <el-button v-if="!isAdmin" type="primary" @click="router.push('/tasks/publish')">
         <el-icon><Plus /></el-icon> 发布任务
       </el-button>
     </div>
@@ -114,14 +115,18 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getCategories, getTaskHall, toggleFavorite } from '@/api/task'
 import { getToken } from '@/api/request'
+import { useUserStore } from '@/stores/user'
 import { formatMoney, remainText, taskStatus } from '@/utils/format'
 
 const router = useRouter()
+const store = useUserStore()
+// 是否管理员（管理员不发布任务）
+const isAdmin = computed(() => store.profile?.role === 'ADMIN')
 const categories = ref([])
 const tasks = ref([])
 const total = ref(0)
@@ -137,6 +142,7 @@ const query = reactive({
   size: 9
 })
 
+// 加载页面数据
 async function load() {
   loading.value = true
   try {
@@ -158,21 +164,25 @@ async function load() {
   }
 }
 
+// 执行搜索
 function search() {
   query.page = 1
   load()
 }
 
+// 切换分类筛选
 function selectCategory(id) {
   query.categoryId = id
   search()
 }
 
+// 事件处理：Page
 function onPage(p) {
   query.page = p
   load()
 }
 
+// 事件处理：Favorite
 async function onFavorite(task) {
   if (!getToken()) {
     router.push({ path: '/login', query: { redirect: '/tasks' } })

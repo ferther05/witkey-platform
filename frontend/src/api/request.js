@@ -1,9 +1,12 @@
+// api/request.js：axios 封装：统一 baseURL、携带 token、剥离响应体、401 跳登录
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
 const TOKEN_KEY = 'witkey_token'
 
+// 功能：getToken
 export const getToken = () => localStorage.getItem(TOKEN_KEY) || ''
+// 功能：setToken
 export const setToken = (token) => {
   if (token) localStorage.setItem(TOKEN_KEY, token)
   else localStorage.removeItem(TOKEN_KEY)

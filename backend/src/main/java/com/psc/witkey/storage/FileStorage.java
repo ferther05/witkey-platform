@@ -1,3 +1,4 @@
+// FileStorage —— 存储抽象接口：屏蔽本地磁盘与对象存储差异
 package com.psc.witkey.storage;
 
 /**
@@ -12,7 +13,14 @@ public interface FileStorage {
     /** 读取文件内容 */
     byte[] load(String objectKey);
 
+    // 删除
     void delete(String objectKey);
 
+    // 判断文件是否存在
     boolean exists(String objectKey);
+
+    /** 存储位置标识：本地实现为 local，对象存储实现为桶名（写入 file_resource.bucket） */
+    default String bucketName() {
+        return "local";
+    }
 }

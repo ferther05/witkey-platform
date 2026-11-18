@@ -1,3 +1,4 @@
+// CategoryController —— 接口：前台读取任务分类
 package com.psc.witkey.controller;
 
 import com.psc.witkey.common.Result;
@@ -9,6 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 接口：前台读取任务分类。
+ */
 @RestController
 @RequestMapping("/api/category")
 public class CategoryController {
@@ -21,6 +25,7 @@ public class CategoryController {
 
     /** 前台只取启用中的分类 */
     @GetMapping
+    // 查询列表
     public Result<List<CategoryVO>> list() {
         return Result.ok(categoryService.listEnabled());
     }

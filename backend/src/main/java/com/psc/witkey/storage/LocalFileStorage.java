@@ -1,7 +1,9 @@
+// LocalFileStorage —— 存储实现：把文件写到本地磁盘目录
 package com.psc.witkey.storage;
 
 import com.psc.witkey.common.BusinessException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -16,6 +18,7 @@ import java.util.UUID;
  * 生产环境换成 MinIO/OSS 实现即可，业务代码不用动。
  */
 @Component
+@ConditionalOnProperty(name = "witkey.storage.type", havingValue = "local", matchIfMissing = true)
 public class LocalFileStorage implements FileStorage {
 
     private final Path root;
@@ -29,7 +32,9 @@ public class LocalFileStorage implements FileStorage {
         }
     }
 
+    // 写入文件内容，返回存储相对路径
     @Override
+    // 写入文件
     public String store(byte[] bytes, String originalName, String contentType) {
         String ext = "";
         int dot = originalName == null ? -1 : originalName.lastIndexOf('.');
@@ -52,7 +57,9 @@ public class LocalFileStorage implements FileStorage {
         }
     }
 
+    // 读取文件内容
     @Override
+    // 读取文件
     public byte[] load(String objectKey) {
         Path target = root.resolve(objectKey).normalize();
         if (!target.startsWith(root)) {
@@ -65,7 +72,9 @@ public class LocalFileStorage implements FileStorage {
         }
     }
 
+    // 删除
     @Override
+    // 删除
     public void delete(String objectKey) {
         Path target = root.resolve(objectKey).normalize();
         if (!target.startsWith(root)) {
@@ -78,7 +87,9 @@ public class LocalFileStorage implements FileStorage {
         }
     }
 
+    // 判断文件是否存在
     @Override
+    // 判断存在
     public boolean exists(String objectKey) {
         Path target = root.resolve(objectKey).normalize();
         return target.startsWith(root) && Files.exists(target);

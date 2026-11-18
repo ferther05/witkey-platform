@@ -1,3 +1,4 @@
+// PublicController —— 接口：游客可读的平台概览（首页展示）
 package com.psc.witkey.controller;
 
 import com.psc.witkey.common.Result;
@@ -20,7 +21,9 @@ public class PublicController {
         this.statsService = statsService;
     }
 
+    // 统计首页公开概览
     @GetMapping("/overview")
+    // 首页概览统计
     public Result<PublicOverviewVO> overview() {
         return Result.ok(statsService.overview());
     }

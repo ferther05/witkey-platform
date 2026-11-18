@@ -1,3 +1,4 @@
+<!-- components/ReportDialog.vue：组件：举报弹窗（任务 / 订单共用） -->
 <template>
   <el-dialog :model-value="modelValue" title="举报" width="460px" @update:model-value="$emit('update:modelValue', $event)">
     <el-alert
@@ -30,6 +31,7 @@ const emit = defineEmits(['update:modelValue'])
 const reason = ref('')
 const submitting = ref(false)
 
+// 提交表单
 async function onSubmit() {
   if (!reason.value.trim()) return ElMessage.warning('请填写举报理由')
   submitting.value = true

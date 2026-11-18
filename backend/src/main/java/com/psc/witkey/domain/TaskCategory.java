@@ -1,3 +1,4 @@
+// TaskCategory —— 实体：任务分类（对应表 task_category），含佣金比例
 package com.psc.witkey.domain;
 
 import jakarta.persistence.Column;

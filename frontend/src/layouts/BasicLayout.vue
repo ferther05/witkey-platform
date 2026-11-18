@@ -1,3 +1,4 @@
+<!-- layouts/BasicLayout.vue：布局：前台（顶部导航 + 内容区 + 页脚） -->
 <template>
   <div class="layout">
     <header class="hdr">
@@ -8,13 +9,27 @@
         </div>
 
         <nav class="nav">
+          <!-- 管理员：后台管理排第一位，且不显示个人业务入口 -->
+          <router-link
+            v-if="isAdmin"
+            to="/admin/dashboard"
+            class="nav-item"
+            :class="{ active: route.path.startsWith('/admin') }"
+          >
+            后台管理
+          </router-link>
           <router-link to="/home" class="nav-item" :class="{ active: route.path === '/home' }">
             首页
           </router-link>
           <router-link to="/tasks" class="nav-item" :class="{ active: route.path.startsWith('/tasks') }">
             任务大厅
           </router-link>
-          <router-link to="/my-tasks" class="nav-item" :class="{ active: route.path === '/my-tasks' }">
+          <router-link
+            v-if="!isAdmin"
+            to="/my-tasks"
+            class="nav-item"
+            :class="{ active: route.path === '/my-tasks' }"
+          >
             我的任务
           </router-link>
           <router-link to="/notice" class="nav-item" :class="{ active: route.path === '/notice' }">
@@ -35,7 +50,11 @@
                 {{ firstChar }}
               </el-avatar>
               <span class="uname">{{ store.profile?.nickname || store.profile?.username || '...' }}</span>
-              <el-tag size="small" :type="store.identityLabel === '威客' ? 'success' : 'warning'" effect="light">
+              <el-tag
+                size="small"
+                :type="store.identityLabel === '管理员' ? 'danger' : store.identityLabel === '威客' ? 'success' : 'warning'"
+                effect="light"
+              >
                 {{ store.identityLabel }}
               </el-tag>
               <el-icon><ArrowDown /></el-icon>
@@ -43,14 +62,14 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-                <el-dropdown-item command="myTasks">我的任务</el-dropdown-item>
-                <el-dropdown-item command="myBids">我的投标</el-dropdown-item>
-                <el-dropdown-item command="orders">我的订单</el-dropdown-item>
-                <el-dropdown-item command="wallet">我的钱包</el-dropdown-item>
+                <template v-if="!isAdmin">
+                  <el-dropdown-item command="myTasks">我的任务</el-dropdown-item>
+                  <el-dropdown-item command="myBids">我的投标</el-dropdown-item>
+                  <el-dropdown-item command="orders">我的订单</el-dropdown-item>
+                  <el-dropdown-item command="wallet">我的钱包</el-dropdown-item>
+                </template>
                 <el-dropdown-item command="notice">消息中心</el-dropdown-item>
-                <el-dropdown-item v-if="store.profile?.role === 'ADMIN'" command="admin" divided>
-                  后台管理
-                </el-dropdown-item>
+                <el-dropdown-item v-if="isAdmin" command="admin" divided>后台管理</el-dropdown-item>
                 <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -79,6 +98,9 @@ import { getUnreadCount } from '@/api/notice'
 const route = useRoute()
 const router = useRouter()
 const store = useUserStore()
+
+// 是否管理员：管理员不参与接单/投标/钱包等个人业务
+const isAdmin = computed(() => store.profile?.role === 'ADMIN')
 const unread = ref(0)
 
 const firstChar = computed(() => {
@@ -86,6 +108,7 @@ const firstChar = computed(() => {
   return name.slice(0, 1).toUpperCase()
 })
 
+// 刷新未读消息数
 async function refreshUnread() {
   try {
     const data = await getUnreadCount()
@@ -95,6 +118,7 @@ async function refreshUnread() {
   }
 }
 
+// 事件处理：Command
 function onCommand(cmd) {
   if (cmd === 'profile') router.push('/profile')
   if (cmd === 'myTasks') router.push('/my-tasks')
@@ -131,6 +155,7 @@ onMounted(async () => {
   position: sticky;
   top: 0;
   z-index: 10;
+  box-shadow: 0 1px 0 rgba(31, 35, 41, 0.04);
 }
 
 .hdr-inner {
@@ -156,6 +181,7 @@ onMounted(async () => {
   font-weight: 700;
   display: grid;
   place-items: center;
+  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.28);
 }
 
 .brand-name {
@@ -190,7 +216,7 @@ onMounted(async () => {
 }
 
 .nav-item.disabled {
-  color: #c9cdd4;
+  color: var(--wk-text-3);
   cursor: not-allowed;
 }
 

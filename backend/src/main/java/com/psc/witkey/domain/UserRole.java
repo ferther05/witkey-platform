@@ -1,3 +1,4 @@
+// UserRole —— 枚举：系统角色（管理员/普通用户）
 package com.psc.witkey.domain;
 
 /**

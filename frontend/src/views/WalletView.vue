@@ -1,3 +1,4 @@
+<!-- views/WalletView.vue：页面：我的钱包（余额、托管、流水、对账、充提） -->
 <template>
   <div class="wallet">
     <h2 class="wk-page-title">我的钱包</h2>
@@ -65,6 +66,27 @@
 
     <div class="wk-card flows">
       <h3>收支流水</h3>
+      <!-- 流水筛选：类型 + 时间范围 -->
+      <div class="flow-filters">
+        <el-select v-model="filter.type" placeholder="全部类型" clearable class="w150" @change="onFilter">
+          <el-option label="充值" value="RECHARGE" />
+          <el-option label="提现" value="WITHDRAW" />
+          <el-option label="冻结" value="FREEZE" />
+          <el-option label="解冻" value="UNFREEZE" />
+          <el-option label="托管扣划" value="SETTLE_PAY" />
+          <el-option label="结算到账" value="SETTLE_IN" />
+        </el-select>
+        <el-date-picker
+          v-model="filter.range"
+          type="datetimerange"
+          start-placeholder="开始时间"
+          end-placeholder="结束时间"
+          value-format="YYYY-MM-DDTHH:mm:ss"
+          class="w340"
+          @change="onFilter"
+        />
+        <el-button @click="resetFilter">重置</el-button>
+      </div>
       <el-table :data="flows" v-loading="loading" empty-text="还没有流水记录">
         <el-table-column label="类型" width="130">
           <template #default="{ row }">
@@ -140,6 +162,8 @@ import { flowStatus } from '@/utils/status'
 const info = reactive({ balance: 0, frozen: 0 })
 const recon = ref(null)
 const flows = ref([])
+// 流水筛选条件
+const filter = reactive({ type: '', range: null })
 const total = ref(0)
 const page = ref(1)
 const size = ref(10)
@@ -150,8 +174,10 @@ const withdrawDialog = ref(false)
 const amount = ref(500)
 const submitting = ref(false)
 
+// 流水类型转文案与颜色
 const flowMeta = (type) => flowStatus(type)
 
+// 加载数据：loadWallet
 async function loadWallet() {
   const data = await getWallet()
   info.balance = data.balance
@@ -159,10 +185,17 @@ async function loadWallet() {
   recon.value = await reconcile().catch(() => null)
 }
 
+// 加载数据：loadFlows
 async function loadFlows() {
   loading.value = true
   try {
-    const data = await getFlows({ page: page.value, size: size.value })
+    const params = { page: page.value, size: size.value }
+    if (filter.type) params.type = filter.type
+    if (filter.range && filter.range.length === 2) {
+      params.start = filter.range[0]
+      params.end = filter.range[1]
+    }
+    const data = await getFlows(params)
     flows.value = data.list || []
     total.value = data.total || 0
   } finally {
@@ -170,16 +203,32 @@ async function loadFlows() {
   }
 }
 
+// 筛选变化：回到第一页重新加载
+function onFilter() {
+  page.value = 1
+  loadFlows()
+}
+
+// 重置筛选
+function resetFilter() {
+  filter.type = ''
+  filter.range = null
+  onFilter()
+}
+
+// 打开充值弹窗
 function openRecharge() {
   amount.value = 500
   rechargeDialog.value = true
 }
 
+// 打开提现弹窗
 function openWithdraw() {
   amount.value = 100
   withdrawDialog.value = true
 }
 
+// 模拟充值
 async function onRecharge() {
   submitting.value = true
   try {
@@ -194,6 +243,7 @@ async function onRecharge() {
   }
 }
 
+// 撤回 / 提现
 async function onWithdraw() {
   if (Number(amount.value) > Number(info.balance)) {
     ElMessage.warning('可提现余额不足')
@@ -212,6 +262,7 @@ async function onWithdraw() {
   }
 }
 
+// 事件处理：Page
 function onPage(p) {
   page.value = p
   loadFlows()
@@ -335,4 +386,18 @@ onMounted(async () => {
 .amount-input { width: 100%; }
 
 .mb { margin-bottom: 16px; }
+.flow-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.w150 {
+  width: 150px;
+}
+
+.w340 {
+  width: 340px;
+}
 </style>

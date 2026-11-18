@@ -1,3 +1,4 @@
+// AdminFileController —— 后台接口：文件列表与删除
 package com.psc.witkey.controller;
 
 import com.psc.witkey.common.PageResult;
@@ -26,15 +27,29 @@ public class AdminFileController {
         this.fileService = fileService;
     }
 
+    // 分页查询
     @GetMapping
-    public Result<PageResult<FileVO>> page(@RequestParam(defaultValue = "1") int page,
-                                           @RequestParam(defaultValue = "10") int size) {
-        return Result.ok(fileService.page(page, size));
+    // 分页查询
+    public Result<PageResult<FileVO>> page(
+            @RequestParam(required = false) String bizType,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
+            java.time.LocalDateTime start,
+            @RequestParam(required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
+            java.time.LocalDateTime end,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return Result.ok(fileService.page(bizType, keyword, start, end, page, size));
     }
 
+    // 删除
     @DeleteMapping("/{id}")
+    // 删除
     public Result<Void> delete(@PathVariable Long id) {
         fileService.delete(id);
+        com.psc.witkey.service.OpLog.now("FILE_DELETE", "FILE", id, "删除文件 #" + id);
         return Result.ok();
     }
 }

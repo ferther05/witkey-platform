@@ -1,3 +1,4 @@
+// ReconcileVO —— 响应体：账户对账结果（实际值 vs 流水推算值）
 package com.psc.witkey.dto;
 
 import java.math.BigDecimal;

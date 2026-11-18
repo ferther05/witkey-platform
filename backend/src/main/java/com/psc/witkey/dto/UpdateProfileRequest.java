@@ -1,8 +1,12 @@
+// UpdateProfileRequest —— 请求体：更新个人资料（昵称、头像、简介、技能、手机号）
 package com.psc.witkey.dto;
 
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * 请求体：更新个人资料（昵称、头像、简介、技能、手机号）。
+ */
 public record UpdateProfileRequest(
         @Size(max = 50, message = "昵称最长 50 个字符") String nickname,
         @Size(max = 255, message = "头像地址过长") String avatar,

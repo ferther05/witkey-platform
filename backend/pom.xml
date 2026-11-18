@@ -23,6 +23,13 @@
     </properties>
 
     <dependencies>
+        <!-- MinIO 对象存储 SDK（文件存储模块的 OSS 实现用） -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.7</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

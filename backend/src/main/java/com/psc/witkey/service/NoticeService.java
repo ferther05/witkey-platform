@@ -1,3 +1,4 @@
+// NoticeService —— 业务：站内消息推送与已读管理
 package com.psc.witkey.service;
 
 import com.psc.witkey.common.BusinessException;
@@ -21,6 +22,7 @@ public class NoticeService {
         this.noticeRepository = noticeRepository;
     }
 
+    // 分页查询
     public PageResult<Notice> page(Long userId, int page, int size) {
         int p = Math.max(page, 1);
         int s = Math.min(Math.max(size, 1), 50);
@@ -29,11 +31,14 @@ public class NoticeService {
         return new PageResult<>(result.getContent(), result.getTotalElements(), p, s);
     }
 
+    // 查询未读消息数
     public long unreadCount(Long userId) {
         return noticeRepository.countByUserIdAndReadFalse(userId);
     }
 
+    // 标记单条消息已读
     @Transactional
+    // 标记已读
     public void markRead(Long userId, Long noticeId) {
         Notice notice = noticeRepository.findByIdAndUserId(noticeId, userId)
                 .orElseThrow(() -> new BusinessException(404, "消息不存在"));
@@ -43,12 +48,16 @@ public class NoticeService {
         }
     }
 
+    // 全部标记已读
     @Transactional
+    // 执行 markAllRead
     public int markAllRead(Long userId) {
         return noticeRepository.markAllRead(userId);
     }
 
+    // 推送一条站内消息
     @Transactional
+    // 推送消息
     public void push(Long userId, String type, String title, String content, String bizType, Long bizId) {
         Notice notice = new Notice();
         notice.setUserId(userId);

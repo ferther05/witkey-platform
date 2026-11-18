@@ -1,3 +1,4 @@
+// BusinessException —— 业务异常：携带错误码与提示信息，由全局异常处理器统一转成 JSON
 package com.psc.witkey.common;
 
 /**
@@ -16,6 +17,7 @@ public class BusinessException extends RuntimeException {
         this.code = code;
     }
 
+    // 获取Code
     public int getCode() {
         return code;
     }

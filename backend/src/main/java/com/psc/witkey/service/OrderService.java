@@ -1,3 +1,4 @@
+// OrderService —— 业务：交付、验收结算、驳回、超时自动验收
 package com.psc.witkey.service;
 
 import com.psc.witkey.common.BusinessException;
@@ -57,6 +58,7 @@ public class OrderService {
 
     /** 选标时调用：生成订单并把当时的佣金比例快照下来 */
     @Transactional
+    // 执行 createForWinningBid
     public BizOrder createForWinningBid(Task task, Bid bid) {
         BigDecimal rate = categoryRepository.findById(task.getCategoryId())
                 .map(TaskCategory::getCommissionRate)
@@ -77,7 +79,9 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    // 威客交付：记录说明与附件，订单转为待验收
     @Transactional
+    // 威客交付
     public void deliver(Long userId, Long orderId, String note, java.util.List<Long> fileIds) {
         BizOrder order = requireOrder(orderId);
         if (!order.getWitkeyId().equals(userId)) {
@@ -105,6 +109,7 @@ public class OrderService {
      * 验收通过：结算给威客（扣佣金），订单完成，任务完成。
      */
     @Transactional
+    // 验收并结算
     public void accept(Long userId, Long orderId) {
         BizOrder order = requireOrder(orderId);
         if (!order.getEmployerId().equals(userId)) {
@@ -113,6 +118,29 @@ public class OrderService {
         if (!OrderStatus.TO_ACCEPT.name().equals(order.getStatus())) {
             throw new BusinessException("当前订单状态不能验收");
         }
+        settleAndFinish(order, false);
+    }
+
+    /**
+     * 超时自动验收：威客交付后雇主长时间不处理，系统按默认验收结算，避免赏金一直挂在托管里。
+     *
+     * @param days 交付后超过多少天自动验收
+     * @return 本次处理的订单数
+     */
+    @Transactional
+    // 超时自动验收
+    public int autoAcceptExpired(int days) {
+        LocalDateTime line = LocalDateTime.now().minusDays(Math.max(days, 1));
+        List<BizOrder> expired = orderRepository.findByStatusAndDeliverTimeBefore(
+                OrderStatus.TO_ACCEPT.name(), line);
+        for (BizOrder order : expired) {
+            settleAndFinish(order, true);
+        }
+        return expired.size();
+    }
+
+    /** 结算并结束订单；auto 表示是否由系统超时触发（影响通知文案） */
+    private void settleAndFinish(BizOrder order, boolean auto) {
         walletService.settle(order.getEmployerId(), order.getWitkeyId(),
                 order.getAmount(), order.getCommissionAmount(),
                 "ORDER-" + order.getOrderNo(), "订单 " + order.getOrderNo() + " 结算");
@@ -125,16 +153,21 @@ public class OrderService {
         updateTaskStatus(order.getTaskId(), TaskStatus.DONE);
 
         BigDecimal net = order.getAmount().subtract(order.getCommissionAmount());
+        String reason = auto ? "交付后超时未验收，系统已自动验收" : "验收通过";
         noticeService.push(order.getWitkeyId(), "TRADE", "订单已结算",
-                "订单 " + order.getOrderNo() + " 验收通过，¥" + net.stripTrailingZeros().toPlainString()
+                "订单 " + order.getOrderNo() + " " + reason + "，¥" + net.stripTrailingZeros().toPlainString()
                         + " 已到账你的钱包（已扣佣金 ¥"
                         + order.getCommissionAmount().stripTrailingZeros().toPlainString() + "）。",
                 "ORDER", order.getId());
-        noticeService.push(order.getEmployerId(), "TRADE", "订单已完成",
-                "订单 " + order.getOrderNo() + " 已完成结算，感谢使用。", "ORDER", order.getId());
+        noticeService.push(order.getEmployerId(), "TRADE", auto ? "订单超时自动验收" : "订单已完成",
+                "订单 " + order.getOrderNo() + (auto
+                        ? " 交付后超过约定期限未验收，系统已自动验收并结算。"
+                        : " 已完成结算，感谢使用。"), "ORDER", order.getId());
     }
 
+    // 驳回验收：退回待交付并记录理由
     @Transactional
+    // 驳回验收
     public void reject(Long userId, Long orderId, String reason) {
         BizOrder order = requireOrder(orderId);
         if (!order.getEmployerId().equals(userId)) {
@@ -153,6 +186,7 @@ public class OrderService {
                 "ORDER", order.getId());
     }
 
+    // 我的订单列表（按角色区分买卖方向）
     public List<OrderVO> myOrders(Long userId, String role) {
         List<BizOrder> orders = "witkey".equalsIgnoreCase(role)
                 ? orderRepository.findByWitkeyIdOrderByCreatedAtDesc(userId)
@@ -170,6 +204,7 @@ public class OrderService {
         return orderRepository.countByWitkeyIdAndStatus(userId, OrderStatus.TO_DELIVER.name());
     }
 
+    // 查询详情
     public OrderVO detail(Long userId, Long orderId) {
         BizOrder order = requireOrder(orderId);
         if (!order.getEmployerId().equals(userId) && !order.getWitkeyId().equals(userId)) {
@@ -180,11 +215,13 @@ public class OrderService {
 
     // ------------------------------------------------------------------ 内部
 
+    // 取订单，不存在则报错
     private BizOrder requireOrder(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(404, "订单不存在"));
     }
 
+    // 同步任务状态
     private void updateTaskStatus(Long taskId, TaskStatus status) {
         taskRepository.findById(taskId).ifPresent(task -> {
             task.setStatus(status.name());
@@ -192,11 +229,13 @@ public class OrderService {
         });
     }
 
+    // 生成订单号（时间戳 + 随机数）
     private String buildOrderNo() {
         return "WK" + LocalDateTime.now().format(NO_FMT)
                 + ThreadLocalRandom.current().nextInt(1000, 9999);
     }
 
+    // 批量实体转响应对象
     private List<OrderVO> toVOList(List<BizOrder> orders) {
         if (orders.isEmpty()) {
             return List.of();
@@ -229,6 +268,7 @@ public class OrderService {
         }).toList();
     }
 
+    // 取用户展示名（优先昵称）
     private String displayName(SysUser user) {
         return user.getNickname() == null || user.getNickname().isBlank()
                 ? user.getUsername() : user.getNickname();

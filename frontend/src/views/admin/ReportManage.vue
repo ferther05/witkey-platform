@@ -1,3 +1,4 @@
+<!-- views/admin/ReportManage.vue：页面：后台举报处理（驳回/下架/封禁/退款/打款） -->
 <template>
   <div class="reports">
     <h2 class="wk-page-title">举报处理</h2>
@@ -97,8 +98,11 @@ const current = ref(null)
 const action = ref('REJECT')
 const remark = ref('')
 
+// 举报对象类型转文字
 const targetText = (t) => ({ TASK: '任务', USER: '用户', ORDER: '订单' }[t] || t)
+// 举报对象类型转标签颜色
 const targetType = (t) => ({ TASK: 'primary', USER: 'danger', ORDER: 'warning' }[t] || 'info')
+// 举报处理动作转文字
 const actionText = (a) => ({
   REJECT: '驳回', TAKE_DOWN: '下架任务', BAN: '封禁用户', REFUND: '强制退款', PAY: '强制打款'
 }[a] || a)
@@ -111,6 +115,7 @@ const actionHint = computed(() => ({
   PAY: '按订单金额结算：扣佣金后打款给威客，订单完成。'
 }[action.value]))
 
+// 加载页面数据
 async function load() {
   loading.value = true
   try {
@@ -122,6 +127,7 @@ async function load() {
   }
 }
 
+// 打开举报处理弹窗
 function openHandle(report, cmd) {
   current.value = report
   action.value = cmd
@@ -129,6 +135,7 @@ function openHandle(report, cmd) {
   dialog.value = true
 }
 
+// 提交表单
 async function onSubmit() {
   submitting.value = true
   try {
@@ -141,6 +148,7 @@ async function onSubmit() {
   }
 }
 
+// 事件处理：Page
 function onPage(p) {
   page.value = p
   load()

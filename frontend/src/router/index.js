@@ -1,5 +1,7 @@
+// router/index.js：路由表与登录守卫
 import { createRouter, createWebHistory } from 'vue-router'
 import { getToken } from '@/api/request'
+import { useUserStore } from '@/stores/user'
 
 const routes = [
   {
@@ -29,7 +31,7 @@ const routes = [
         path: 'tasks/publish',
         name: 'taskPublish',
         component: () => import('@/views/TaskPublish.vue'),
-        meta: { title: '发布任务', requiresAuth: true }
+        meta: { title: '发布任务', requiresAuth: true, personalOnly: true }
       },
       {
         path: 'tasks/:id(\\d+)',
@@ -41,37 +43,37 @@ const routes = [
         path: 'tasks/:id(\\d+)/edit',
         name: 'taskEdit',
         component: () => import('@/views/TaskPublish.vue'),
-        meta: { title: '编辑任务', requiresAuth: true }
+        meta: { title: '编辑任务', requiresAuth: true, personalOnly: true }
       },
       {
         path: 'my-tasks',
         name: 'myTasks',
         component: () => import('@/views/MyTasks.vue'),
-        meta: { title: '我的任务', requiresAuth: true }
+        meta: { title: '我的任务', requiresAuth: true, personalOnly: true }
       },
       {
         path: 'my-bids',
         name: 'myBids',
         component: () => import('@/views/MyBids.vue'),
-        meta: { title: '我的投标', requiresAuth: true }
+        meta: { title: '我的投标', requiresAuth: true, personalOnly: true }
       },
       {
         path: 'orders',
         name: 'orders',
         component: () => import('@/views/OrdersView.vue'),
-        meta: { title: '我的订单', requiresAuth: true }
+        meta: { title: '我的订单', requiresAuth: true, personalOnly: true }
       },
       {
         path: 'orders/:id(\\d+)',
         name: 'orderDetail',
         component: () => import('@/views/OrderDetail.vue'),
-        meta: { title: '订单详情', requiresAuth: true }
+        meta: { title: '订单详情', requiresAuth: true, personalOnly: true }
       },
       {
         path: 'wallet',
         name: 'wallet',
         component: () => import('@/views/WalletView.vue'),
-        meta: { title: '我的钱包', requiresAuth: true }
+        meta: { title: '我的钱包', requiresAuth: true, personalOnly: true }
       },
       {
         path: 'profile',
@@ -118,6 +120,12 @@ const routes = [
         meta: { title: '财务总览', requiresAuth: true }
       },
       {
+        path: 'log',
+        name: 'adminLog',
+        component: () => import('@/views/admin/OperationLog.vue'),
+        meta: { title: '操作日志', requiresAuth: true }
+      },
+      {
         path: 'files',
         name: 'adminFiles',
         component: () => import('@/views/admin/FileManage.vue'),
@@ -145,13 +153,23 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   document.title = to.meta.title ? `${to.meta.title} · 威客帮` : '威客帮'
   if (to.meta.requiresAuth && !getToken()) {
     return { path: '/login', query: { redirect: to.fullPath } }
   }
   if (to.path === '/login' && getToken()) {
     return { path: '/home' }
+  }
+  // 管理员不参与个人业务：访问"我的任务/投标/订单/钱包/发布"直接跳后台
+  if (to.meta.personalOnly) {
+    const store = useUserStore()
+    if (!store.profile) {
+      await store.fetchProfile().catch(() => {})
+    }
+    if (store.profile?.role === 'ADMIN') {
+      return { path: '/admin/dashboard' }
+    }
   }
   return true
 })

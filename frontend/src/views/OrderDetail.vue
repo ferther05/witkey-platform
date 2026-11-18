@@ -1,3 +1,4 @@
+<!-- views/OrderDetail.vue：页面：订单详情（进度、附件、交付、验收、举报） -->
 <template>
   <div v-loading="loading" class="order">
     <el-page-header content="订单详情" @back="router.back()" class="back" />
@@ -186,6 +187,7 @@ const deliverFiles = ref([])
 const uploading = ref(false)
 const reportVisible = ref(false)
 
+// 选择文件并上传
 async function onPickFile(uploadFileItem) {
   const raw = uploadFileItem.raw
   if (!raw) return
@@ -215,6 +217,7 @@ const stepActive = computed(() => {
   }
 })
 
+// 加载页面数据
 async function load() {
   loading.value = true
   try {
@@ -226,6 +229,7 @@ async function load() {
   }
 }
 
+// 提交交付
 async function onDeliver() {
   if (!deliverNote.value.trim()) return ElMessage.warning('请填写交付说明')
   submitting.value = true
@@ -241,6 +245,7 @@ async function onDeliver() {
   }
 }
 
+// 验收通过
 async function onAccept() {
   try {
     await ElMessageBox.confirm(
@@ -255,6 +260,7 @@ async function onAccept() {
   await load()
 }
 
+// 驳回并填写理由
 async function onReject() {
   let reason = ''
   try {
