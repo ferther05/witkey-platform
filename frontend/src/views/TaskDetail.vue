@@ -229,7 +229,7 @@ const myBid = computed(() => {
   return bids.value.find((b) => b.witkeyId === store.profile.id) || null
 })
 
-// 加载页面数据
+// 加载任务详情；如果是威客身份，再查一次自己的投标
 async function load() {
   loading.value = true
   try {
@@ -261,7 +261,7 @@ function openBidDialog(existing) {
   bidDialog.value = true
 }
 
-// 事件处理：SubmitBid
+// 提交投标（首次投标或修改已有方案）
 async function onSubmitBid() {
   if (!bidForm.content.trim()) return ElMessage.warning('请填写方案说明')
   submitting.value = true
@@ -280,7 +280,7 @@ async function onSubmitBid() {
   }
 }
 
-// 事件处理：WithdrawBid
+// 撤回自己的投标（仅待选状态可撤）
 async function onWithdrawBid() {
   try {
     await ElMessageBox.confirm('撤回后该投标不再展示给雇主，确定撤回吗？', '撤回投标', { type: 'warning' })
@@ -308,7 +308,7 @@ async function onSelect(bid) {
   router.push(`/orders/${data.orderId}`)
 }
 
-// 事件处理：Favorite
+// 收藏 / 取消收藏
 async function onFavorite() {
   if (!getToken()) {
     router.push({ path: '/login', query: { redirect: route.fullPath } })
@@ -319,7 +319,7 @@ async function onFavorite() {
   ElMessage.success(data.favorite ? '已收藏' : '已取消收藏')
 }
 
-// 撤回 / 提现
+// 撤回任务（仅未成交状态，赏金解冻）
 async function onWithdraw() {
   try {
     await ElMessageBox.confirm(

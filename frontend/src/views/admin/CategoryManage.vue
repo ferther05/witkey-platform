@@ -74,7 +74,7 @@ const editing = ref(null)
 
 const form = reactive({ name: '', commissionRate: 10, sort: 0 })
 
-// 加载页面数据
+// 加载全部分类（含已停用）
 async function load() {
   loading.value = true
   try {
@@ -102,7 +102,7 @@ function openEdit(row) {
   dialog.value = true
 }
 
-// 事件处理：Save
+// 保存：按"编辑 / 新增"分别调更新或创建接口
 async function onSave() {
   if (!form.name.trim()) return ElMessage.warning('请填写分类名称')
   saving.value = true
@@ -121,14 +121,14 @@ async function onSave() {
   }
 }
 
-// 切换状态
+// 启用 / 停用：回传相反的 status
 async function toggle(row) {
   await adminUpdateCategory(row.id, { status: row.status === 1 ? 0 : 1 })
   ElMessage.success('状态已更新')
   await load()
 }
 
-// 事件处理：Delete
+// 删除分类（有任务时后端会改为停用并返回提示）
 async function onDelete(row) {
   try {
     await ElMessageBox.confirm(`确定删除分类「${row.name}」吗？`, '删除分类', { type: 'warning' })

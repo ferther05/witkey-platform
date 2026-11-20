@@ -31,7 +31,6 @@ public class AdminTaskController {
 
     // 分页查询待审核任务（最新提交在前）
     @GetMapping("/audit")
-    // 查询待审核队列
     public Result<PageResult<TaskVO>> pendingAudit(@RequestParam(defaultValue = "1") int page,
                                                    @RequestParam(defaultValue = "10") int size) {
         return Result.ok(taskService.pendingAudit(page, size));
@@ -39,7 +38,6 @@ public class AdminTaskController {
 
     // 审核任务：通过进入招募中，驳回写入意见并通知雇主
     @PostMapping("/{id}/audit")
-    // 审核任务
     public Result<TaskVO> audit(@PathVariable Long id, @RequestBody AuditRequest req) {
         var vo = taskService.audit(id, Boolean.TRUE.equals(req.pass()), req.remark());
         // 操作留痕：审核任务

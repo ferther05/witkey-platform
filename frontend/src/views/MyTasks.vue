@@ -100,7 +100,7 @@ const page = ref(1)
 const size = ref(8)
 const loading = ref(false)
 
-// 加载页面数据
+// 按当前 Tab（我发布的 / 我收藏的）和状态筛选拉列表
 async function load() {
   loading.value = true
   try {
@@ -114,19 +114,19 @@ async function load() {
   }
 }
 
-// 事件处理：TabChange
+// 切换 Tab：回到第一页并重新加载
 function onTabChange() {
   page.value = 1
   load()
 }
 
-// 事件处理：Page
+// 翻页
 function onPage(p) {
   page.value = p
   load()
 }
 
-// 撤回 / 提现
+// 撤回任务：二次确认后调接口，赏金由后端解冻退回
 async function onWithdraw(task) {
   try {
     await ElMessageBox.confirm(

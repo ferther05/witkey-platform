@@ -31,16 +31,14 @@ public class AdminCategoryController {
         this.categoryService = categoryService;
     }
 
-    // 查询列表
+    // 查询全部分类
     @GetMapping
-    // 查询列表
     public Result<List<CategoryVO>> list() {
         return Result.ok(categoryService.listAll());
     }
 
-    // 新建
+    // 新增分类
     @PostMapping
-    // 新建
     public Result<CategoryVO> create(@RequestBody Map<String, Object> body) {
         String name = (String) body.get("name");
         java.math.BigDecimal rate = body.get("commissionRate") == null ? null
@@ -52,9 +50,8 @@ public class AdminCategoryController {
         return Result.ok(vo);
     }
 
-    // 更新任务：重新回到待审核并调整托管金额
+    // 修改分类
     @PutMapping("/{id}")
-    // 更新数据
     public Result<CategoryVO> update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         String name = (String) body.get("name");
         java.math.BigDecimal rate = body.get("commissionRate") == null ? null
@@ -67,9 +64,8 @@ public class AdminCategoryController {
         return Result.ok(vo);
     }
 
-    // 删除
+    // 删除分类
     @DeleteMapping("/{id}")
-    // 删除
     public Result<Void> delete(@PathVariable Long id) {
         categoryService.delete(id);
         // 操作留痕：删除分类

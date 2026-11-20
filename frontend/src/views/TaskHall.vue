@@ -142,7 +142,7 @@ const query = reactive({
   size: 9
 })
 
-// 加载页面数据
+// 按当前筛选条件拉取任务列表（关键词 / 分类 / 预算 / 排序 / 分页）
 async function load() {
   loading.value = true
   try {
@@ -176,13 +176,13 @@ function selectCategory(id) {
   search()
 }
 
-// 事件处理：Page
+// 翻页：换页后重新拉数据
 function onPage(p) {
   query.page = p
   load()
 }
 
-// 事件处理：Favorite
+// 收藏 / 取消收藏：成功后原地更新星标，不整页刷新
 async function onFavorite(task) {
   if (!getToken()) {
     router.push({ path: '/login', query: { redirect: '/tasks' } })

@@ -113,8 +113,6 @@ public class TaskController {
         taskService.withdraw(SecurityUtils.userId(), id);
         // 操作留痕：撤回任务
         com.psc.witkey.service.OpLog.now("TASK_WITHDRAW", "TASK", id, "撤回任务 #" + id + "，赏金解冻");
-        // 操作留痕：撤回任务
-        com.psc.witkey.service.OpLog.now("TASK_WITHDRAW", "TASK", id, "撤回任务 #" + id + "，赏金解冻");
         return Result.ok();
     }
 }

@@ -1,7 +1,7 @@
 -- =============================================================
 -- 威客任务平台 数据库初始化脚本  witkey_platform
 -- MySQL 8.0 / utf8mb4
--- 说明：结构与后端 JPA 实体保持一致（12 张表），可直接执行；可重复执行。
+-- 说明：结构与后端 JPA 实体保持一致（12 张表），可重复执行。
 -- 执行：mysql -u root -p --default-character-set=utf8mb4 < witkey_platform.sql
 -- =============================================================
 
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `bid` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_bid_task_witkey` (`task_id`,`witkey_id`),
   KEY `idx_bid_task_status` (`task_id`,`status`)
-) ENGINE=InnoDB AUTO_INCREMENT=198 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='投标';
+) ENGINE=InnoDB AUTO_INCREMENT=203 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='投标';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS `file_resource` (
   PRIMARY KEY (`id`),
   KEY `idx_file_uploader` (`uploader_id`),
   KEY `idx_file_biz` (`biz_type`,`biz_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=176 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='文件资源';
+) ENGINE=InnoDB AUTO_INCREMENT=185 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='文件资源';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS `notice` (
   `user_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_notice_user_read` (`user_id`,`is_read`)
-) ENGINE=InnoDB AUTO_INCREMENT=1189 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='站内消息';
+) ENGINE=InnoDB AUTO_INCREMENT=1209 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='站内消息';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS `operation_log` (
   KEY `idx_log_created` (`created_at`),
   KEY `idx_log_user` (`user_id`),
   KEY `idx_log_action` (`action`)
-) ENGINE=InnoDB AUTO_INCREMENT=742 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=803 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -176,7 +176,7 @@ CREATE TABLE IF NOT EXISTS `task` (
   PRIMARY KEY (`id`),
   KEY `idx_task_status_cat` (`status`,`category_id`,`created_at`),
   KEY `idx_task_employer` (`employer_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=260 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='任务';
+) ENGINE=InnoDB AUTO_INCREMENT=273 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='任务';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -189,7 +189,7 @@ CREATE TABLE IF NOT EXISTS `task_category` (
   `commission_rate` decimal(5,2) NOT NULL DEFAULT '10.00' COMMENT '平台抽佣百分比',
   `created_at` datetime(6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='任务分类';
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='任务分类';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS `task_favorite` (
   `created_at` datetime(6) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_favorite_user_task` (`user_id`,`task_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='任务收藏';
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='任务收藏';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -228,7 +228,7 @@ CREATE TABLE IF NOT EXISTS `wallet_flow` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_flow_biz_no` (`biz_no`),
   KEY `idx_flow_user_time` (`user_id`,`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=688 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='资金流水';
+) ENGINE=InnoDB AUTO_INCREMENT=709 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='资金流水';
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -250,3 +250,4 @@ INSERT INTO `task_category` (`name`, `commission_rate`, `sort`, `status`, `creat
 ON DUPLICATE KEY UPDATE `commission_rate` = VALUES(`commission_rate`);
 
 -- 说明：管理员账号由后端启动时 DataInitializer 自动创建（admin / 123456）
+-- 演示账号：alice / 654321（雇主）、bobby / 123456（威客），可用注册接口自行创建

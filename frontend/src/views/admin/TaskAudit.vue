@@ -75,7 +75,7 @@ const updatedAt = ref('')
 
 let timer = null
 
-// 加载页面数据
+// 加载待审核队列（最新提交在前），并记录刷新时间
 async function load() {
   loading.value = true
   try {
@@ -125,7 +125,7 @@ async function onAudit(task, pass) {
   await load()
 }
 
-// 事件处理：Page
+// 翻页
 function onPage(p) {
   page.value = p
   load()

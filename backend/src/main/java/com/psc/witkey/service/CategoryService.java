@@ -36,9 +36,8 @@ public class CategoryService {
         return categoryRepository.findAllByOrderBySortAsc().stream().map(CategoryVO::from).toList();
     }
 
-    // 新建
+    // 新建分类
     @Transactional
-    // 新建
     public CategoryVO create(String name, BigDecimal commissionRate, Integer sort) {
         if (name == null || name.isBlank()) {
             throw new BusinessException("分类名称不能为空");
@@ -59,9 +58,8 @@ public class CategoryService {
         return CategoryVO.from(categoryRepository.save(category));
     }
 
-    // 更新任务：重新回到待审核并调整托管金额
+    // 修改分类：名称 / 佣金比例 / 排序 / 启用状态
     @Transactional
-    // 更新数据
     public CategoryVO update(Long id, String name, BigDecimal commissionRate, Integer sort, Integer status) {
         TaskCategory category = categoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "分类不存在"));
@@ -83,9 +81,8 @@ public class CategoryService {
         return CategoryVO.from(categoryRepository.save(category));
     }
 
-    // 删除
+    // 删除分类（已有任务时改为停用）
     @Transactional
-    // 删除
     public void delete(Long id) {
         TaskCategory category = categoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "分类不存在"));

@@ -163,7 +163,7 @@ function removeFile(id) {
   files.value = files.value.filter((f) => f.id !== id)
 }
 
-// 提交表单
+// 提交：先校验表单，再按"新建 / 编辑"分别调接口
 async function onSubmit() {
   await formRef.value?.validate().catch(() => Promise.reject())
   const amount = Number(form.budget)

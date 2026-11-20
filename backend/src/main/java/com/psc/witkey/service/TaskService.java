@@ -93,9 +93,8 @@ public class TaskService {
         return toVO(saved, false);
     }
 
-    // 更新任务：重新回到待审核并调整托管金额
+    // 编辑任务：赏金差额冻结/解冻，改完重新进入待审核
     @Transactional
-    // 更新数据
     public TaskVO update(Long userId, Long taskId, TaskPublishRequest req) {
         Task task = requireOwnedTask(userId, taskId);
         if (!TaskStatus.valueOf(task.getStatus()).canEdit()) {
@@ -185,9 +184,8 @@ public class TaskService {
         return toVO(taskRepository.save(task), false);
     }
 
-    // 切换收藏状态
+    // 收藏 / 取消收藏，返回最新状态
     @Transactional
-    // 切换收藏
     public boolean toggleFavorite(Long userId, Long taskId) {
         taskRepository.findById(taskId).orElseThrow(() -> new BusinessException(404, "任务不存在"));
         var existing = favoriteRepository.findByUserIdAndTaskId(userId, taskId);
@@ -239,9 +237,8 @@ public class TaskService {
         return new PageResult<>(toVOList(result.getContent(), viewerId), result.getTotalElements(), p, s);
     }
 
-    // 查询详情
+    // 任务详情（未上架仅雇主本人/管理员可见，并累加浏览量）
     @Transactional
-    // 查询详情
     public TaskVO detail(Long taskId, Long viewerId, boolean viewerIsAdmin) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BusinessException(404, "任务不存在"));
